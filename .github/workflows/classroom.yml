@@ -1,0 +1,229 @@
+name: Autograding Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  repository_dispatch:
+
+concurrency:
+  group: autograding-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+  pull-requests: write
+
+jobs:
+  run-autograding-tests:
+    name: AI-Powered Feedback and Autograding
+    runs-on: ubuntu-latest
+    env:
+      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+      SYSTEM_PROMPT: ${{ vars.SYSTEM_PROMPT }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Read assignment instructions
+        id: instructions
+        if: ${{ vars.ENABLE_AI_FEEDBACK == 'true' }}
+        run: |
+          # Reads the content of the README.md file into an output variable.
+          # The `EOF` marker is used to handle multi-line file content.
+          echo "instructions=$(cat README.md | sed 's/\"/\\\"/g' | sed 's/$/\\n/' | tr -d '\n' | sed 's/\\n/\\\\n/g')" >> $GITHUB_OUTPUT
+
+      - name: Read source code
+        id: source_code
+        if: ${{ vars.ENABLE_AI_FEEDBACK == 'true' }}
+        run: |
+          {
+            echo 'source_code<<EOF'
+            find src/main/java -type f -name "*.java" | while read -r file; do
+              echo "=== File: $file ==="
+              cat "$file"
+              echo
+            done
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Read test code
+        id: test_code
+        if: ${{ vars.ENABLE_AI_FEEDBACK == 'true' }}
+        run: |
+          {
+            echo 'test_code<<EOF'
+            if [ -d "src/test/java" ]; then
+              find src/test/java -type f -name "*.java" | while read -r file; do
+                echo "=== File: $file ==="
+                cat "$file"
+                echo
+              done
+            else
+              echo "No test code found."
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+      - name: Generate AI Feedback
+        id: ai_feedback
+        if: ${{ vars.ENABLE_AI_FEEDBACK == 'true' }}
+        run: |
+          # This step sends the collected data to the OpenRouter API.
+          INSTRUCTIONS=$(jq -Rs . <<'EOF'
+          ${{ steps.instructions.outputs.instructions }}
+          EOF
+          )
+          SOURCE_CODE=$(jq -Rs . <<'EOF'
+          ${{ steps.source_code.outputs.source_code }}
+          EOF
+          )
+          TEST_CODE=$(jq -Rs . <<'EOF'
+          ${{ steps.test_code.outputs.test_code }}
+          EOF
+          )
+
+          if [ -z "$INSTRUCTIONS" ] || [ -z "$SOURCE_CODE" ] || [ -z "$TEST_CODE" ]; then
+            echo "Error: One or more required variables are not set."
+          exit 1
+          fi
+
+          # Assigning to USER_CONTENT with variable expansion
+          PAYLOAD="Please provide feedback on the following Java assignment.
+
+          --- Assignment Instructions ---
+          ${INSTRUCTIONS}
+
+          --- Source files ---          
+          ${SOURCE_CODE}
+
+          --- Test files ---
+          ${TEST_CODE}"
+
+          JSON_CONTENT=$(jq -n \
+          --argjson model "$OPENROUTER_MODEL" \
+          --arg system_prompt "$SYSTEM_PROMPT" \
+          --arg payload "$PAYLOAD" \
+          '{
+          models: $model,
+          messages: [
+            {role: "system", content: $system_prompt},
+            {role: "user", content: $payload}
+          ]
+          }')
+
+          echo "$JSON_CONTENT"
+
+          API_RESPONSE=$(echo "$JSON_CONTENT" | curl https://openrouter.ai/api/v1/chat/completions \
+          -H "Authorization: Bearer ${{ secrets.OPENROUTER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d @-)
+
+          echo "$API_RESPONSE"
+
+          FEEDBACK_CONTENT=$(echo "$API_RESPONSE" | jq -r '.choices[0].message.content')
+          echo "feedback<<EOF" >> $GITHUB_OUTPUT
+          echo "$FEEDBACK_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Post Feedback as PR Comment ✍️
+        if: ${{ vars.ENABLE_AI_FEEDBACK == 'true' && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v8
+        env:
+          FEEDBACK_BODY: ${{ steps.ai_feedback.outputs.feedback }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const { owner, repo } = context.repo;
+            const signature = "🤖 AI Feedback";
+            const timestamp = new Date().toISOString();
+            const newEntry = `🕒 _Posted on ${timestamp}_\n\n${process.env.FEEDBACK_BODY}\n\n---\n`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+
+            const existing = comments.find(c =>
+              c.user?.login === "github-actions[bot]" &&
+              c.body?.includes(signature)
+            );
+
+            if (existing) {
+              const previousContent = existing.body.replace(/^### 🤖 AI Feedback\s*/, '').trim();
+              const collapsed = `<details><summary>Previous Feedback</summary>\n\n${previousContent}\n</details>`;
+              const updatedBody = `### ${signature}\n\n${newEntry}${collapsed}`;
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body: updatedBody
+              });
+            } else {
+              const body = `### ${signature}\n\n${newEntry}`;
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body
+              });
+            }
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Check for modified files and test presence
+        id: code-check
+        run: |
+          # Check for test files
+          has_tests=$(find src/test/java -type f -name "*.java" | grep -q . && echo "true" || echo "false")
+
+          # Check for modified files in src folders
+          git fetch origin main
+          changed_files=$(git diff --name-only origin/main...HEAD | grep -E '^src/(main|test)/java/.*\.java$' || true)
+          has_changes=$(test -n "$changed_files" && echo "true" || echo "false")
+
+          echo "has_tests=$has_tests" >> $GITHUB_OUTPUT
+          echo "has_changes=$has_changes" >> $GITHUB_OUTPUT
+           echo "should_grade=$([[ $has_tests == 'true' && $has_changes == 'true' ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+      - name: Compilation Check
+        id: compilation-check
+        if: ${{ steps.code-check.outputs.has_tests == 'true' && steps.code-check.outputs.has_changes == 'true' }}
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Compilation Check
+          command: mvn -ntp compile
+          timeout: 10
+          max-score: 1
+
+      - name: Tests
+        id: basic-tests
+        if: ${{ steps.code-check.outputs.has_tests == 'true' && steps.code-check.outputs.has_changes == 'true' }}
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: Basic Tests
+          command: mvn -ntp test
+          timeout: 10
+          max-score: 1
+
+      - name: Autograding Reporter
+        if: ${{ steps.code-check.outputs.should_grade == 'true' }}
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          COMPILATION-CHECK_RESULTS: "${{steps.compilation-check.outputs.result}}"
+          BASIC-TESTS_RESULTS: "${{steps.basic-tests.outputs.result}}"
+        with:
+          runners: compilation-check,basic-tests
+
+      - name: Reporter Skipped Notice
+        if: ${{ steps.code-check.outputs.should_grade != 'true' }}
+        run: |
+          echo "🛑 Skipping reporter: No grading results available due to missing tests or unchanged code."
