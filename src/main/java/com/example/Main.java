@@ -1,8 +1,9 @@
 package com.example;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.io.Console;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.*;
 import java.util.Arrays;
 
 public class Main {
@@ -20,12 +21,13 @@ public class Main {
         String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
         String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
 
-        // Kontrollera om dev-mode fungerar
+        /*
         System.out.println("Dev Mode Check");
         System.out.println("JDBC URL: " + jdbcUrl);
         System.out.println("DB User: " + dbUser);
         System.out.println("DB Password: " + dbPass);
         System.out.println("======================");
+         */
 
         if (jdbcUrl == null || dbUser == null || dbPass == null) {
             throw new IllegalStateException(
@@ -38,7 +40,58 @@ public class Main {
             throw new RuntimeException(e);
         }
         //Todo: Starting point for your code
+
+        boolean loggedIn = false;
+        InputStream in = System.in;
+
+        while (!loggedIn) {
+            try {
+                System.out.print("Username: ");
+                String username = readLine(in);
+
+                System.out.print("Password: ");
+                String password = readLine(in);
+
+                try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+                     PreparedStatement ps = connection.prepareStatement(
+                             "SELECT 1 FROM account WHERE name = ? AND password = ?")) {
+
+                    ps.setString(1, username);
+                    ps.setString(2, password);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            loggedIn = true;
+                            System.out.println("Login successful!");
+                        } else {
+                            System.out.println("Invalid username or password");
+                            System.out.print("Press 0 to exit or enter to retry: ");
+                            String exit = readLine(in);
+                            if ("0".equals(exit)) return;
+                        }
+                    }
+                }
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException("I/O error reading input", e);
+            }
+        }
     }
+
+    // Reads a line from System.in using Java 25 IO
+    private static String readLine(InputStream in) throws IOException {
+        byte[] buffer = new byte[1024];
+        int len = 0;
+        int b;
+        while ((b = in.read()) != -1) {
+            if (b == '\n') break;
+            buffer[len++] = (byte) b;
+        }
+        return new String(buffer, 0, len).trim();
+    }
+
 
     /**
      * Determines if the application is running in development mode based on system properties,
