@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 public class Main {
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
         }
@@ -19,6 +19,13 @@ public class Main {
         String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
         String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
         String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
+
+        // Kontrollera om dev-mode fungerar
+        System.out.println("Dev Mode Check");
+        System.out.println("JDBC URL: " + jdbcUrl);
+        System.out.println("DB User: " + dbUser);
+        System.out.println("DB Password: " + dbPass);
+        System.out.println("======================");
 
         if (jdbcUrl == null || dbUser == null || dbPass == null) {
             throw new IllegalStateException(
