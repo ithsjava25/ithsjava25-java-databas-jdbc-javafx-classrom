@@ -1,6 +1,5 @@
 package com.example;
 
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
@@ -35,26 +34,21 @@ public class Main {
                             "as system properties (-Dkey=value) or environment variables.");
         }
 
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        //Todo: Starting point for your code
-
-        boolean loggedIn = false;
         InputStream in = System.in;
 
-        while (!loggedIn) {
-            try {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
+
+            // LOGIN LOOP
+            boolean loggedIn = false;
+            while (!loggedIn) {
                 System.out.print("Username: ");
                 String username = readLine(in);
 
                 System.out.print("Password: ");
                 String password = readLine(in);
 
-                try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
-                     PreparedStatement ps = connection.prepareStatement(
-                             "SELECT 1 FROM account WHERE name = ? AND password = ?")) {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "SELECT 1 FROM account WHERE name = ? AND password = ?")) {
 
                     ps.setString(1, username);
                     ps.setString(2, password);
@@ -71,14 +65,41 @@ public class Main {
                         }
                     }
                 }
-
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException("I/O error reading input", e);
             }
+
+            boolean exit = false;
+            while (!exit) {
+                System.out.println("\nMenu:");
+                System.out.println("1) List moon missions");
+                System.out.println("2) Get a moon mission by mission_id");
+                System.out.println("3) Count missions for a given year");
+                System.out.println("0) Exit");
+                System.out.print("Choose an option: ");
+                String choice = readLine(in);
+
+                switch (choice) {
+                    case "1":
+                        listMoonMissions(connection);
+                        break;
+                    case "2":
+                        getMoonMissionById(connection, in);
+                        break;
+                    case "3":
+                        countMissionsByYear(connection, in);
+                        break;
+                    case "0":
+                        exit = true;
+                        break;
+                    default:
+                        System.out.println("Invalid option");
+                }
+            }
+
+        } catch (SQLException | IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
 
     // Reads a line from System.in using Java 25 IO
     private static String readLine(InputStream in) throws IOException {
