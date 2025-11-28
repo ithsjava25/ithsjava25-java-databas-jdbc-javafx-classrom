@@ -87,6 +87,16 @@ public class Main {
                     case "3":
                         countMissionsByYear(connection, in);
                         break;
+                    case "4":
+                        createAccount(connection, in);
+                        break;
+                    case "5":
+                        updateAccountPassword(connection, in);
+                        break;
+                    case "6":
+                        deleteAccount(connection, in);
+                        break;
+
                     case "0":
                         exit = true;
                         break;
