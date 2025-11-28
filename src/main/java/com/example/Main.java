@@ -135,6 +135,21 @@ public class Main {
         }
     }
 
+    // COUNT MISSIONS BY YEAR
+    private void countMissionsByYear(Connection connection, InputStream in) throws SQLException, IOException {
+        System.out.print("Enter year: ");
+        int year = Integer.parseInt(readLine(in));
+
+        String sql = "SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    System.out.println("Number of missions in " + year + ": " + rs.getInt(1));
+                }
+            }
+        }
+    }
 
 
 
