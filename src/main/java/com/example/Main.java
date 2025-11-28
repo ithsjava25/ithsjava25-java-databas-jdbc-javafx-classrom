@@ -100,6 +100,20 @@ public class Main {
         }
     }
 
+    // LIST MOON MISSIONS
+    private void listMoonMissions(Connection connection) throws SQLException {
+        String sql = "SELECT spacecraft FROM moon_mission";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            System.out.println("Moon Missions:");
+            while (rs.next()) {
+                System.out.println(rs.getString("spacecraft"));
+            }
+        }
+    }
+
+
+
 
     // Reads a line from System.in using Java 25 IO
     private static String readLine(InputStream in) throws IOException {
