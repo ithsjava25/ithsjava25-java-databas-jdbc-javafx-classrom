@@ -207,7 +207,7 @@ public class CliAppIT {
         ) + System.lineSeparator();
 
         String out = runMainWithInput(input);
-        System.out.println(out);
+
         assertThat(out)
                 .as("CLI should print details that include the spacecraft name for the selected mission")
                 .contains("Luna 3")
