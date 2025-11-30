@@ -138,7 +138,16 @@ public class Main {
 
     public void getMissionById(Connection connection, Scanner sc) throws SQLException{
         System.out.println("MissionId: ");
-        int missionId = Integer.parseInt(sc.nextLine().trim());
+
+        int missionId;
+        while(true) {
+            try {
+                missionId = Integer.parseInt(sc.nextLine().trim());
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+            }
+        }
 
         String sql = """
                 SELECT *
@@ -159,14 +168,14 @@ public class Main {
                 System.out.println("Mission Type: " + rs.getString("mission_type"));
                 System.out.println("Outcome: " + rs.getString("outcome"));
             } else {
-                System.out.println(" No mission found with ID: " + missionId);
+                System.out.println("No missions found with ID: " + missionId);
             }
         }
 
     }
 
     public void missionsCountByYear(Connection connection, Scanner sc) throws SQLException{
-        System.out.println("Launch date:");
+        System.out.println("Launch year:");
         int launchYear = Integer.parseInt(sc.nextLine().trim());
 
         String sql = """
@@ -179,7 +188,7 @@ public class Main {
             ResultSet rs = ps.executeQuery();
             if(rs.next()){
                 int count = rs.getInt("missionCount");
-                System.out.println("Number of mission in " + launchYear + ": " + count);
+                System.out.println("Number of missions in " + launchYear + ": " + count);
             } else{
                 System.out.println("No result found.");
             }
@@ -195,17 +204,20 @@ public class Main {
         String ssn = sc.nextLine().trim();
         System.out.println("Password: ");
         String password = sc.nextLine().trim();
+        String name = firstName.substring(0, Math.min(3, firstName.length()))
+                    + lastName.substring(0, Math.min(3, lastName.length()));
 
         String sql = """
-                INSERT INTO account (first_name, last_name, ssn, password)
-                VALUES (?, ?, ?, ?);
+                INSERT INTO account (name,first_name, last_name, ssn, password)
+                VALUES (?, ?, ?, ?, ?);
                 """;
 
         try(PreparedStatement ps = connection.prepareStatement(sql)){
-            ps.setString(1, firstName);
-            ps.setString(2, lastName);
-            ps.setString(3, ssn);
-            ps.setString(4, password);
+            ps.setString(1, name);
+            ps.setString(2, firstName);
+            ps.setString(3, lastName);
+            ps.setString(4, ssn);
+            ps.setString(5, password);
 
             ps.executeUpdate();
         }
@@ -214,7 +226,7 @@ public class Main {
 
     public void updateAccount(Connection connection, Scanner sc) throws SQLException{
         System.out.println("User id:");
-        String userId = sc.nextLine().trim();
+        int userId = Integer.parseInt(sc.nextLine().trim());
         System.out.println("New password: ");
         String newPassword = sc.nextLine().trim();
 
@@ -226,7 +238,7 @@ public class Main {
 
         try(PreparedStatement ps = connection.prepareStatement(sql)){
             ps.setString(1, newPassword);
-            ps.setString(2, userId);
+            ps.setInt(2, userId);
 
             ps.executeUpdate();
         }
