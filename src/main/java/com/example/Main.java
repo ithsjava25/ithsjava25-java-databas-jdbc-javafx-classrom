@@ -97,6 +97,9 @@ public class Main {
                     case "5":
                         updateAccountPassword(connection, in);
                         break;
+                    case "6":
+                        deleteAccount(connection, in);
+                        break;
                     case "0":
                         exit = true;
                         break;
@@ -237,7 +240,34 @@ public class Main {
         }
     }
 
+    // DELETE ACCOUNT
+    private void deleteAccount(Connection connection, InputStream in) throws SQLException, IOException {
+        // List all accounts first
+        listAccounts(connection);
 
+        long userId = -1;
+        while (true) {
+            System.out.print("Enter the User ID to delete: ");
+            String input = readLine(in);
+            try {
+                userId = Long.parseLong(input);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a numeric user ID.");
+            }
+        }
+
+        String sql = "DELETE FROM account WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            int deleted = ps.executeUpdate();
+            if (deleted > 0) {
+                System.out.println("Account deleted successfully!");
+            } else {
+                System.out.println("No account found with user_id " + userId);
+            }
+        }
+    }
 
     // Reads a line from System.in using Java 25 IO
     private static String readLine(InputStream in) throws IOException {
