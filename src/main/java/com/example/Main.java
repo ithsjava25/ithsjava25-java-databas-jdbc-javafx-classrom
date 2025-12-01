@@ -94,6 +94,9 @@ public class Main {
                     case "4":
                         createAccount(connection, in);
                         break;
+                    case "5":
+                        updateAccountPassword(connection, in);
+                        break;
                     case "0":
                         exit = true;
                         break;
@@ -185,6 +188,52 @@ public class Main {
             ps.setString(5, password);
             ps.executeUpdate();
             System.out.println("Account " + username + " created!");
+        }
+    }
+
+    // UPDATE ACCOUNT PASSWORD
+    private void updateAccountPassword(Connection connection, InputStream in) throws SQLException, IOException {
+        // List all accounts first
+        listAccounts(connection);
+
+        long userId = -1;
+        while (true) {
+            System.out.print("Enter the User ID to update: ");
+            String input = readLine(in);
+            try {
+                userId = Long.parseLong(input);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a numeric user ID.");
+            }
+        }
+
+        System.out.print("New password: ");
+        String newPassword = readLine(in);
+
+        String sql = "UPDATE account SET password = ? WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, newPassword);
+            ps.setLong(2, userId);
+            int updated = ps.executeUpdate();
+            if (updated > 0) {
+                System.out.println("Account password updated successfully!");
+            } else {
+                System.out.println("No account found with user_id " + userId);
+            }
+        }
+    }
+
+
+    // Helper to list accounts
+    private void listAccounts(Connection connection) throws SQLException {
+        String sql = "SELECT user_id, first_name, last_name FROM account";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            System.out.println("Accounts:");
+            while (rs.next()) {
+                System.out.printf("%d: %s %s%n", rs.getLong("user_id"), rs.getString("first_name"), rs.getString("last_name"));
+            }
         }
     }
 
