@@ -62,7 +62,21 @@ public class JdbcAccountRepository implements AccountRepository{
 
     @Override
     public boolean updatePassword(long userId, String newPassword) {
-        return false;
+        String sql= "UPDATE account SET password = ? WHERE user_id = ?";
+
+        try(Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+            PreparedStatement ps=connection.prepareStatement(sql)){
+
+            ps.setString(1, newPassword);
+            ps.setLong(2, userId);
+
+            int rowsAffected=ps.executeUpdate();
+            return rowsAffected>0;
+
+        }catch (SQLException e){
+            System.err.println(" Could not update password: " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
