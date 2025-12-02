@@ -4,8 +4,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class Main {
+
+    private AccountRepository accountRepository;
+    private MoonMissionRepository missionRepository;
+    private Scanner scanner;
+
 
     static void main(String[] args) {
         if (isDevMode(args)) {
@@ -31,6 +37,37 @@ public class Main {
             throw new RuntimeException(e);
         }
         //Todo: Starting point for your code
+        this.accountRepository=new JdbcAccountRepository(jdbcUrl, dbUser, dbPass);
+        this.missionRepository=new JdbcMoonMissionRepository(jdbcUrl,dbUser,dbPass);
+        this.scanner=new Scanner(System.in);
+
+        if(handleLogin()){
+            showMainMenu();
+        }
+
+        scanner.close();
+    }
+
+    private boolean handleLogin() {
+        boolean loggedIn=false;
+        while(!loggedIn){
+            System.out.println("Username: ");
+            String username=scanner.nextLine();
+            System.out.println("Password: ");
+            String password= scanner.nextLine();
+
+            if (accountRepository.isValidLogin(username, password)){
+                System.out.println("login successful! ");
+                loggedIn=true;
+            } else{
+                System.out.println(" Login invalid. Enter 0 to exit, or any other key to try again. ");
+                String choice= scanner.nextLine().trim();
+                if (choice.equals("0")){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
