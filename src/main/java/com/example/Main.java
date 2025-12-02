@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class Main {
@@ -48,6 +50,8 @@ public class Main {
         scanner.close();
     }
 
+
+
     private boolean handleLogin() {
         boolean loggedIn=false;
         while(!loggedIn){
@@ -57,7 +61,7 @@ public class Main {
             String password= scanner.nextLine();
 
             if (accountRepository.isValidLogin(username, password)){
-                System.out.println("login successful! ");
+                System.out.println("Login successful! ");
                 loggedIn=true;
             } else{
                 System.out.println(" Login invalid. Enter 0 to exit, or any other key to try again. ");
@@ -68,6 +72,73 @@ public class Main {
             }
         }
         return true;
+    }
+
+    private void showMainMenu() {
+        boolean running= true;
+        while (running){
+            System.out.println("\n--- Main Menu ---");
+            System.out.println("1) List moon missions");
+            System.out.println("2) Get a moon mission by mission_id");
+            System.out.println("3) Count missions for a given year");
+            System.out.println("4) Create an account");
+            System.out.println("5) Update an account password");
+            System.out.println("6) Delete an account");
+            System.out.println("0) Exit");
+            System.out.print("Choose an option: ");
+
+            String choice=scanner.nextLine();
+
+            try{
+                switch(choice){
+                    case "1": listMoonMissions(); break;
+                    case "2": getMissionById(); break;
+                    case "3": countMissionsByYear(); break;
+                    case "4": createAccount(); break;
+                    case "5": updateAccountPassword(); break;
+                    case "6": deleteAccount(); break;
+                    case "0": running = false; break;
+                    default: System.out.println("Invalid option. Please try again."); break;
+
+                }
+            } catch (Exception e){
+                //to avoid numberFormat exceptions.
+                System.err.println(" An error occurred: " + e.getMessage());
+                scanner.nextLine();
+            }
+
+        }
+    }
+
+
+
+    private void listMoonMissions() {
+        System.out.println("\n--- Spacecraft Names ---");
+        List<String> names = missionRepository.findAllSpacecraftNames();
+        names.forEach(name-> System.out.println("- " + name));
+    }
+
+    private void getMissionById() {
+        System.out.println("Enter Mission ID: ");
+        try{
+            long id = Long.parseLong(scanner.nextLine());
+            Optional<MoonMission> mission = missionRepository.findById(id);
+
+            if (mission.isPresent()){
+                MoonMission m=mission.get();
+
+                System.out.println("\nMission details for ID " + m.missionId() + ":");
+                System.out.println("  Name: " + m.spacecraftName());
+                System.out.println("  Year: " + m.launchYear());
+                System.out.println("  Description: " + m.description());
+            } else{
+                System.out.println("Mission not found.");
+            }
+
+
+        } catch(NumberFormatException e){
+            System.out.println("Invalid ID format.");
+        }
     }
 
     /**
