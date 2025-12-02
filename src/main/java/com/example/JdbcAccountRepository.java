@@ -1,5 +1,7 @@
 package com.example;
 
+import java.sql.*;
+
 public class JdbcAccountRepository implements AccountRepository{
 
     private final String jdbcUrl;
@@ -15,7 +17,27 @@ public class JdbcAccountRepository implements AccountRepository{
 
     @Override
     public boolean isValidLogin(String username, String password) {
+        String sql = "SELECT COUNT(*) FROM account WHERE name = ? AND password = ?";
+
+        try(
+                Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+                PreparedStatement ps= connection.prepareStatement(sql);
+                ) {
+                ps.setString(1, username);
+                ps.setString(2, password);
+
+                try(ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()){
+                        return rs.getInt(1)>0;
+                    }
+                }
+
+        } catch (SQLException e){
+            return false;
+        }
+
         return false;
+
     }
 
     @Override
