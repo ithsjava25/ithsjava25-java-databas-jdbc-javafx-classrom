@@ -155,6 +155,64 @@ public class Main {
         }
     }
 
+    private void createAccount(){
+        System.out.println("\n--- Create Account ---");
+        System.out.print("Enter first name: ");
+        String firstName = scanner.nextLine();
+        System.out.print("Enter last name: ");
+        String lastName = scanner.nextLine();
+        System.out.print("Enter SSN: ");
+        String ssn = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        if(accountRepository.createAccount(firstName,lastName,ssn,password)){
+            System.out.println(" Account created successfully!");
+        } else{
+            System.out.println("failed to create account.");
+        }
+
+    }
+
+    private void updateAccountPassword(){
+        System.out.println("Enter user ID to update: ");
+
+        try{
+            long userId=Long.parseLong(scanner.nextLine());
+            System.out.println("Enter password: ");
+            String newPassword= scanner.nextLine();
+
+
+            if (accountRepository.updatePassword(userId,newPassword)){
+                System.out.println("Password updated successfully!");
+            } else{
+                System.out.println("failed to update password.");
+            }
+        } catch(NumberFormatException e ){
+            System.out.println("Invalid User ID format.");
+        }
+
+    }
+
+    private void deleteAccount(){
+        System.out.println(" Enter User ID to delete: ");
+
+        try{
+            long userId=Long.parseLong(scanner.nextLine());
+
+            if (accountRepository.deleteAccount(userId)){
+                System.out.println("Account deleted successfully!");
+            }else{
+                System.out.println("failed to delete account. User id not found.");
+            }
+
+        } catch (NumberFormatException e){
+            System.out.println("Invalid User ID format.");
+        }
+
+
+    }
+
     /**
      * Determines if the application is running in development mode based on system properties,
      * environment variables, or command-line arguments.
