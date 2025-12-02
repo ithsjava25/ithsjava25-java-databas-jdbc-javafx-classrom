@@ -81,6 +81,21 @@ public class JdbcAccountRepository implements AccountRepository{
 
     @Override
     public boolean deleteAccount(long userId) {
-        return false;
+        String sql= " DELETE FROM account WHERE user_id = ?";
+
+        try(Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+            PreparedStatement ps=connection.prepareStatement(sql)){
+
+            ps.setLong(1, userId);
+
+            int rowsAffected=ps.executeUpdate();
+            return rowsAffected>0;
+
+        }catch (SQLException e){
+            System.err.println(" Could not delete account: " + e.getMessage());
+            return false;
+        }
+
+
     }
 }
