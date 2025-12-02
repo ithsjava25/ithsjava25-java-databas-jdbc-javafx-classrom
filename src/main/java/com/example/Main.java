@@ -112,6 +112,7 @@ public class Main {
 
 
 
+
     private void listMoonMissions() {
         System.out.println("\n--- Spacecraft Names ---");
         List<String> names = missionRepository.findAllSpacecraftNames();
@@ -138,6 +139,19 @@ public class Main {
 
         } catch(NumberFormatException e){
             System.out.println("Invalid ID format.");
+        }
+    }
+
+    private void countMissionsByYear() {
+        System.out.println(" Enter launch year: ");
+
+        try{
+            int year= Integer.parseInt(scanner.nextLine());
+            int count= missionRepository.countByYear(year);
+
+            System.out.println(" There were " + count + " missions launched in " + year + ".");
+        } catch(NumberFormatException e){
+            System.out.println(" Invalid year format.");
         }
     }
 
