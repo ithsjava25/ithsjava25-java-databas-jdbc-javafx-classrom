@@ -42,7 +42,22 @@ public class JdbcAccountRepository implements AccountRepository{
 
     @Override
     public boolean createAccount(String firstName, String lastName, String ssn, String password) {
-        return false;
+        String sql= "INSERT INTO account (first_name, last_name, ssn, password) VALUES (?, ?, ?, ?)";
+
+        try(Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+            PreparedStatement ps= connection.prepareStatement(sql)){
+
+            ps.setString(1, firstName);
+            ps.setString(2, lastName);
+            ps.setString(3, ssn);
+            ps.setString(4, password);
+
+            int rowsAffected= ps.executeUpdate();
+            return rowsAffected>0;
+        } catch (SQLException e){
+            System.err.println("Could not create account: " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
