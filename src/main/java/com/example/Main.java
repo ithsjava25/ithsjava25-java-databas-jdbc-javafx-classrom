@@ -64,7 +64,7 @@ public class Main {
                 System.out.println("Login successful! ");
                 loggedIn=true;
             } else{
-                System.out.println(" Login invalid. Enter 0 to exit, or any other key to try again. ");
+                System.out.println(" Invalid username or password. ");
                 String choice= scanner.nextLine().trim();
                 if (choice.equals("0")){
                     return false;
@@ -114,7 +114,7 @@ public class Main {
 
 
     private void listMoonMissions() {
-        System.out.println("\n--- Spacecraft Names ---");
+
         List<String> names = missionRepository.findAllSpacecraftNames();
         names.forEach(name-> System.out.println("- " + name));
     }
@@ -129,9 +129,12 @@ public class Main {
                 MoonMission m=mission.get();
 
                 System.out.println("\nMission details for ID " + m.missionId() + ":");
-                System.out.println("  Name: " + m.spacecraftName());
-                System.out.println("  Year: " + m.launchYear());
-                System.out.println("  Description: " + m.description());
+                System.out.println("  Name: " + m.spacecraft());
+                System.out.println("  Year: " + m.launch_date());
+                System.out.println("  Outcome: " + m.outcome());
+                System.out.println("  Carrier: " + m.carrier_rocket());
+                System.out.println("  Operator: " + m.operator());
+                System.out.println("  Mission type: " + m.mission_type());
             } else{
                 System.out.println("Mission not found.");
             }

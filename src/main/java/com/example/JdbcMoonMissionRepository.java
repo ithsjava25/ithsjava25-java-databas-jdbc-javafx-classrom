@@ -1,6 +1,7 @@
 package com.example;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,14 +24,14 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
     public List<String> findAllSpacecraftNames() {
         List<String> names = new ArrayList<>();
 
-        String sql= "SELECT spacecraft_name FROM moon_mission ORDER BY launch_year";
+        String sql= "SELECT spacecraft FROM moon_mission ORDER BY launch_date";
 
         try( Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
         Statement statement= connection.createStatement();
         ResultSet rs= statement.executeQuery(sql)) {
 
             while (rs.next()){
-                names.add(rs.getString("spacecraft_name"));
+                names.add(rs.getString("spacecraft"));
 
             }
         } catch (SQLException e){
@@ -43,7 +44,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
 
     @Override
     public Optional<MoonMission> findById(long missionId) {
-        String sql = "SELECT mission_id, spacecraft_name, launchYear, description FROM moon_mission WHERE mission_id = ?";
+        String sql = "SELECT mission_id, spacecraft, launch_date, carrier_rocket, operator, mission_type, outcome FROM moon_mission WHERE mission_id = ?";
 
         try( Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
              PreparedStatement ps= connection.prepareStatement(sql)){
@@ -55,9 +56,12 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
                     //Map to MoonMission object:
                     MoonMission mission= new MoonMission(
                             rs.getLong("mission_id"),
-                            rs.getString("spacecraft_name"),
-                            rs.getInt("launch_year"),
-                            rs.getString("description")
+                            rs.getString("spacecraft"),
+                            rs.getObject("launch_date", LocalDate.class),
+                            rs.getString("outcome"),
+                            rs.getString("carrier_rocket"),
+                            rs.getString("operator"),
+                            rs.getString("mission_type")
                     );
 
                     return Optional.of(mission);
@@ -71,7 +75,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
 
     @Override
     public int countByYear(int year) {
-        String sql = "SELECT COUNT(*) FROM moon_mission WHERE launch_year = ?";
+        String sql = "SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
 
         try( Connection connection=DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
         PreparedStatement ps=connection.prepareStatement(sql)){
