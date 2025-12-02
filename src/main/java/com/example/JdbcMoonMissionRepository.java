@@ -71,6 +71,23 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
 
     @Override
     public int countByYear(int year) {
+        String sql = "SELECT COUNT(*) FROM moon_mission WHERE launch_year = ?";
+
+        try( Connection connection=DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+        PreparedStatement ps=connection.prepareStatement(sql)){
+
+            ps.setInt(1, year);
+
+            try(ResultSet rs=ps.executeQuery()){
+                if(rs.next()){
+                    //Result is COUNT(*) column 1:
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e ){
+            System.err.println(" Failure in counting missions per year: " + e.getMessage());
+        }
+        //returnera 0 om inga resultat finns:
         return 0;
     }
 }
