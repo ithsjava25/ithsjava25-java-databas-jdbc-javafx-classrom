@@ -42,12 +42,13 @@ public class Main {
         String user = scanner.nextLine();
         System.out.println("Password: ");
         String pass = scanner.nextLine();
-        if( user.isEmpty() || pass.isEmpty() ) {
+        if (user.isEmpty() || pass.isEmpty()) {
             System.out.println("Username or password cannot be empty.");
         }
 
         if (!accountRepo.findUsernames().contains(user) || !accountRepo.findPasswords().contains(pass)) {
             System.out.println("Invalid username or password.");
+            return;
         }
         String choice;
         String menu = """
@@ -61,8 +62,39 @@ public class Main {
                 """;
         System.out.println(menu);
         choice = scanner.next();
-        if (choice.equalsIgnoreCase("1")) {
-            System.out.println(moonMissionRepo.listMoonMissions());
+
+        switch (choice) {
+            case "1" -> System.out.println(moonMissionRepo.listMoonMissions());
+            case "2" -> {
+                System.out.println("Provide a mission_id to get information: ");
+                String id = scanner.next();
+                System.out.println(moonMissionRepo.getMoonMissionById(id).toString());
+            }
+            case "3" -> {
+                System.out.println("Enter a year for which you want number of missions listed: ");
+                int year = scanner.nextInt();
+                System.out.println("In " + year + "there were " + moonMissionRepo.missionsCountByYear(year) + "missions.");
+            }
+            case "4" -> {
+                String name, firstName, lastName, password, ssn;
+                System.out.println("Type in you username: ");
+                name = scanner.next();
+                System.out.println("Type in your first name: ");
+                firstName = scanner.next();
+                System.out.println("Type in your last name: ");
+                lastName = scanner.next();
+                System.out.println("Type in your password: ");
+                password = scanner.next();
+                System.out.println("Type in your ssn: ");
+                ssn = scanner.next();
+                Account newAccount = new Account(name, password, firstName, lastName, ssn);
+                if (accountRepo.createAccount(newAccount)) {
+                    System.out.println("Account successfully created.");
+                    System.out.println(accountRepo.countAccounts());
+                } else {
+                    System.out.println("Account could not be created.");
+                }
+            }
         }
     }
 

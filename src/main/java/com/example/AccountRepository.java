@@ -5,4 +5,7 @@ import java.util.List;
 public interface AccountRepository {
     List<String> findUsernames();
     List<String> findPasswords();
+    List<Account> findAccounts();
+    boolean createAccount(Account account);
+    int countAccounts();
 }
