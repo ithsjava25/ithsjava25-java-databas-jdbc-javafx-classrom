@@ -8,16 +8,13 @@ import java.util.Optional;
 
 public class JdbcMoonMissionRepository implements MoonMissionRepository{
 
-
-    private final String jdbcUrl;
-    private final String dbUser;
-    private final String dbPass;
+    //declare datasource object
+    private final DataSource dataSource;
 
 
-    public JdbcMoonMissionRepository(String jdbcUrl, String dbUser, String dbPass) {
-        this.jdbcUrl = jdbcUrl;
-        this.dbUser = dbUser;
-        this.dbPass = dbPass;
+// inject into contructor:
+    public JdbcMoonMissionRepository(DataSource dataSource){
+        this.dataSource=dataSource;
     }
 
     @Override
@@ -26,7 +23,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
 
         String sql= "SELECT spacecraft FROM moon_mission ORDER BY launch_date";
 
-        try( Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+        try( Connection connection= dataSource.getConnection();
         Statement statement= connection.createStatement();
         ResultSet rs= statement.executeQuery(sql)) {
 
@@ -46,7 +43,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
     public Optional<MoonMission> findById(long missionId) {
         String sql = "SELECT mission_id, spacecraft, launch_date, carrier_rocket, operator, mission_type, outcome FROM moon_mission WHERE mission_id = ?";
 
-        try( Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+        try( Connection connection= dataSource.getConnection();
              PreparedStatement ps= connection.prepareStatement(sql)){
 
             ps.setLong(1, missionId);
@@ -77,7 +74,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
     public int countByYear(int year) {
         String sql = "SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
 
-        try( Connection connection=DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+        try( Connection connection=dataSource.getConnection();
         PreparedStatement ps=connection.prepareStatement(sql)){
 
             ps.setInt(1, year);
@@ -91,7 +88,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
         } catch (SQLException e ){
             System.err.println(" Failure in counting missions per year: " + e.getMessage());
         }
-        //returnera 0 om inga resultat finns:
+        //return 0 if no results are found:
         return 0;
     }
 }

@@ -4,14 +4,13 @@ import java.sql.*;
 
 public class JdbcAccountRepository implements AccountRepository{
 
-    private final String jdbcUrl;
-    private final String dbUser;
-    private final String dbPass;
+    //Fetching Datasource object
+    private final DataSource dataSource;
 
-    public JdbcAccountRepository(String jdbcUrl, String dbUser, String dbPass){
-        this.jdbcUrl=jdbcUrl;
-        this.dbUser=dbUser;
-        this.dbPass=dbPass;
+
+    //injection the datasource object into the constructor:
+    public JdbcAccountRepository(DataSource dataSource){
+        this.dataSource=dataSource;
     }
 
 
@@ -20,7 +19,7 @@ public class JdbcAccountRepository implements AccountRepository{
         String sql = "SELECT COUNT(*) FROM account WHERE name = ? AND password = ?";
 
         try(
-                Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+                Connection connection= dataSource.getConnection();
                 PreparedStatement ps= connection.prepareStatement(sql);
                 ) {
                 ps.setString(1, username);
@@ -44,7 +43,7 @@ public class JdbcAccountRepository implements AccountRepository{
     public boolean createAccount(String firstName, String lastName, String ssn, String password) {
         String sql= "INSERT INTO account (first_name, last_name, ssn, password) VALUES (?, ?, ?, ?)";
 
-        try(Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+        try(Connection connection= dataSource.getConnection();
             PreparedStatement ps= connection.prepareStatement(sql)){
 
             ps.setString(1, firstName);
@@ -64,7 +63,7 @@ public class JdbcAccountRepository implements AccountRepository{
     public boolean updatePassword(long userId, String newPassword) {
         String sql= "UPDATE account SET password = ? WHERE user_id = ?";
 
-        try(Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+        try(Connection connection= dataSource.getConnection();
             PreparedStatement ps=connection.prepareStatement(sql)){
 
             ps.setString(1, newPassword);
@@ -83,7 +82,7 @@ public class JdbcAccountRepository implements AccountRepository{
     public boolean deleteAccount(long userId) {
         String sql= " DELETE FROM account WHERE user_id = ?";
 
-        try(Connection connection= DriverManager.getConnection(jdbcUrl,dbUser,dbPass);
+        try(Connection connection= dataSource.getConnection();
             PreparedStatement ps=connection.prepareStatement(sql)){
 
             ps.setLong(1, userId);

@@ -39,8 +39,13 @@ public class Main {
             throw new RuntimeException(e);
         }
         //Todo: Starting point for your code
-        this.accountRepository=new JdbcAccountRepository(jdbcUrl, dbUser, dbPass);
-        this.missionRepository=new JdbcMoonMissionRepository(jdbcUrl,dbUser,dbPass);
+
+        //create datasource:
+        DataSource dataSource=new SimpleDriverManagerDataSource(jdbcUrl,dbUser,dbPass);
+
+        //create Repositories by injecting datasource instead of  jdbcUrl, dbUser, dbPass.
+        this.accountRepository=new JdbcAccountRepository(dataSource);
+        this.missionRepository=new JdbcMoonMissionRepository(dataSource);
         this.scanner=new Scanner(System.in);
 
         if(handleLogin()){
