@@ -4,17 +4,22 @@ import com.example.repositorys.AccountRepository;
 
 public class JdbcAccountRepository implements AccountRepository {
     @Override
-    public void createAccount(String firstName, String lastName, String ssn, String password) {
-
+    public Boolean createAccount(String firstName, String lastName, String ssn, String password) {
+        return true;
     }
 
     @Override
-    public void updatePassword(int userId, String newPassword) {
-
+    public Boolean updatePassword(int userId, String newPassword) {
+        return true;
     }
 
     @Override
-    public void deleteAccount(int userId) {
+    public Boolean deleteAccount(int userId) {
+        return true;
+    }
 
+    @Override
+    public Boolean validateCredentials(String username, String password) {
+        return true;
     }
 }

@@ -16,18 +16,8 @@ public class Main {
     }
 
     public void run() {
-        // Resolve DB settings with precedence: System properties -> Environment variables
-        String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
-        String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
-        String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
-
-        if (jdbcUrl == null || dbUser == null || dbPass == null) {
-            throw new IllegalStateException(
-                    "Missing DB configuration. Provide APP_JDBC_URL, APP_DB_USER, APP_DB_PASS " +
-                            "as system properties (-Dkey=value) or environment variables.");
-        }
-
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
+        SimpleDriverManagerDataSource ds = new SimpleDriverManagerDataSource();
+        try (Connection connection = ds.getConnection()) {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -52,6 +42,8 @@ public class Main {
          * else
          * getOptions()
          */
+
+        // TODO: Parse "year" into localTimeDate for option 3
 
         Scanner sc = new Scanner(System.in);
 
@@ -82,17 +74,7 @@ public class Main {
         return Arrays.asList(args).contains("--dev"); //Argument --dev
     }
 
-    /**
-     * Reads configuration with precedence: Java system property first, then environment variable.
-     * Returns trimmed value or null if neither source provides a non-empty value.
-     */
-    private static String resolveConfig(String propertyKey, String envKey) {
-        String v = System.getProperty(propertyKey);
-        if (v == null || v.trim().isEmpty()) {
-            v = System.getenv(envKey);
-        }
-        return (v == null || v.trim().isEmpty()) ? null : v.trim();
-    }
+
 
 
     public void getOptions() {
