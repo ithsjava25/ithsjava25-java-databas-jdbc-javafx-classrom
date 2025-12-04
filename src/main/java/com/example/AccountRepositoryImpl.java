@@ -6,7 +6,11 @@ import java.util.List;
 
 public class AccountRepositoryImpl implements AccountRepository {
     Connection connection;
-    PreparedStatement findAccountsStmt, createAccountStmt, countAccountsStmt;
+    PreparedStatement findAccountsStmt,
+            createAccountStmt,
+            countAccountsStmt,
+            updatePasswordStmt,
+            deleteAccountStmt;
 
 
     public AccountRepositoryImpl(String jdbc, String username, String password) {
@@ -15,6 +19,8 @@ public class AccountRepositoryImpl implements AccountRepository {
             findAccountsStmt = connection.prepareStatement("select * from account");
             createAccountStmt = connection.prepareStatement("insert into account(name, password, first_name, last_name, ssn) values (?, ?, ?, ?, ?)");
             countAccountsStmt = connection.prepareStatement("select count(*) from account");
+            updatePasswordStmt= connection.prepareStatement("update account set password=? where user_id=?");
+            deleteAccountStmt = connection.prepareStatement("delete from account where user_id=?");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -102,4 +108,35 @@ public class AccountRepositoryImpl implements AccountRepository {
         }
         return count;
     }
+    @Override
+    public boolean updatePassword(int id, String password) {
+        try {
+            updatePasswordStmt.setString(1, password);
+            updatePasswordStmt.setInt(2, id);
+            int rowsAffected = updatePasswordStmt.executeUpdate();
+
+            if  (rowsAffected > 0) {
+                return true;
+            }
+
+        } catch (SQLException e) {
+            return false;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean deleteAccount(int id) {
+        try {
+            deleteAccountStmt.setInt(1, id);
+            int rowsAffected = deleteAccountStmt.executeUpdate();
+            if  (rowsAffected > 0) {
+                return true;
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+        return false;
+    }
+
 }

@@ -95,6 +95,30 @@ public class Main {
                     System.out.println("Account could not be created.");
                 }
             }
+            case "5" -> {
+                System.out.println("Enter a user_id to update the password for: ");
+                int userId = scanner.nextInt();
+                System.out.println("Enter new password:");
+                String newPassword = scanner.next();
+                while (newPassword.isEmpty()) {
+                    System.out.println("Password cannot be empty.");
+                    System.out.println("Enter new password:");
+                    newPassword = scanner.next();
+                }
+                if(accountRepo.updatePassword(userId, newPassword))
+                    System.out.println("Password successfully updated.");
+                else
+                    System.out.println("Password could not be updated.");
+            }
+            case "6" -> {
+                System.out.println("Enter the user_id for the account you want to delete: ");
+                int userId = scanner.nextInt();
+                if(accountRepo.deleteAccount(userId))
+                    System.out.println("Account successfully deleted.");
+                else
+                    System.out.println("Account could not be deleted.");
+
+            }
         }
     }
 

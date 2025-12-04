@@ -8,4 +8,6 @@ public interface AccountRepository {
     List<Account> findAccounts();
     boolean createAccount(Account account);
     int countAccounts();
+    boolean updatePassword(int id, String password);
+    boolean deleteAccount(int id);
 }
