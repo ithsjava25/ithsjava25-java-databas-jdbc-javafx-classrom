@@ -75,14 +75,9 @@ public class MoonMission {
 
     @Override
     public String toString() {
-        return "MoonMission{" +
-                "mission_id='" + mission_id + '\'' +
-                ", spacecraft='" + spacecraft + '\'' +
-                ", carrier_rocket='" + carrier_rocket + '\'' +
-                ", operator='" + operator + '\'' +
-                ", mission_type='" + mission_type + '\'' +
-                ", outcome='" + outcome + '\'' +
-                ", launch_date=" + launch_date +
-                '}';
+        return String.format(
+                "ID: %s | Spacecraft: %s | Rocket: %s | Operator: %s | Type: %s | Outcome: %s | Launch date: %s",
+                mission_id, spacecraft, carrier_rocket, operator, mission_type, outcome, launch_date
+        );
     }
 }

@@ -2,6 +2,7 @@ package com.example;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -34,16 +35,9 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        Optional<Account> currentUser = login(accountRepo, scanner);
+        if (validateLogin(accountRepo, scanner)) return;
 
-        while (currentUser.isEmpty()) {
-            currentUser = login(accountRepo, scanner);
-        }
-
-        boolean running = true;
-
-        while (running) {
-            showMenu();
+        showMenu();
             String choice = scanner.nextLine();
             if (!choice.isEmpty()) {
                 switch (choice) {
@@ -53,19 +47,31 @@ public class Main {
                     case "4" -> createAccount(scanner, accountRepo);
                     case "5" -> updatePasswordById(scanner, accountRepo);
                     case "6" -> deleteAccountById(scanner, accountRepo);
-                    case "0" -> {
-                        System.out.println("Exiting...");
-                        running = false;
-                    }
+                    case "0" -> System.out.println("Exiting...");
                     default -> System.out.println("Invalid choice.");
                 }
             } else {
                 System.out.println("Choice cannot be empty.");
             }
 
-        }
-
         scanner.close();
+    }
+
+    private boolean validateLogin(AccountRepository accountRepo, Scanner scanner) {
+        Optional<Account> currentUser = login(accountRepo, scanner);
+
+        while (currentUser.isEmpty()) {
+            System.out.println("Enter 0 to exit or 1 to try again.");
+            String answer = scanner.nextLine().trim();
+            if (answer.equals("0")) {
+                System.out.println("Exiting...");
+                return true;
+            } else if (answer.equals("1")) {
+                currentUser = login(accountRepo, scanner);
+            }else
+                System.out.println("Invalid choice.");
+        }
+        return false;
     }
 
     private Optional<Account> login(AccountRepository accountRepo, Scanner sc) {
@@ -79,19 +85,11 @@ public class Main {
         }
 
         Optional<Account> maybeAccount = accountRepo.findByUsername(user);
-        if (maybeAccount.isPresent()) {
-            Account account = maybeAccount.get();
-            if (account.getPassword().equals(pass)) {
-                return Optional.of(account);
-            } else {
-                System.out.println("Invalid username or password.");
-                return Optional.empty();
-            }
-        } else {
+        if(maybeAccount.isEmpty() || !pass.equals(maybeAccount.get().getPassword())) {
             System.out.println("Invalid username or password.");
             return Optional.empty();
         }
-
+        return maybeAccount;
     }
 
     private static void deleteAccountById(Scanner sc, AccountRepository accountRepo) {
@@ -121,7 +119,7 @@ public class Main {
 
     private static void createAccount(Scanner sc, AccountRepository accountRepo) {
         String name, firstName, lastName, password, ssn;
-        System.out.println("Type in you username: ");
+        System.out.println("Type in your username: ");
         name = sc.nextLine().trim();
         System.out.println("Type in your first name: ");
         firstName = sc.nextLine().trim();
@@ -142,13 +140,17 @@ public class Main {
     private static void countMissionsForYear(Scanner sc, MoonMissionRepository moonMissionRepo) {
         System.out.println("Enter a year for which you want number of missions listed: ");
         int year = Integer.parseInt(sc.nextLine().trim());
-        System.out.println("In " + year + "there were " + moonMissionRepo.missionsCountByYear(year) + "missions.");
+        System.out.println("In " + year + " there were " + moonMissionRepo.missionsCountByYear(year) + " missions.");
     }
 
     private static void getMissionById(Scanner sc, MoonMissionRepository moonMissionRepo) {
         System.out.println("Provide a mission_id to get information: ");
         String id = sc.nextLine().trim();
-        System.out.println(moonMissionRepo.getMoonMissionById(id).toString());
+        List<MoonMission> missions = moonMissionRepo.getMoonMissionById(id);
+        if(missions.isEmpty())
+            System.out.println("Mission not found.");
+        else
+            System.out.println(missions);
     }
 
     private static void showMissions(MoonMissionRepository moonMissionRepo) {
