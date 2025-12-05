@@ -54,7 +54,7 @@ public class Main {
                 System.out.println("Choice cannot be empty.");
             }
 
-        scanner.close();
+//        scanner.close();
     }
 
     private boolean validateLogin(AccountRepository accountRepo, Scanner scanner) {
