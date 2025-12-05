@@ -3,55 +3,89 @@ package com.example;
 import com.example.jdbc.JdbcAccountRepository;
 import com.example.jdbc.JdbcMoonMissionRepository;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
 
-    private SimpleDriverManagerDataSource dataSource;
-    private JdbcAccountRepository accountRepo;
-    private JdbcMoonMissionRepository missionRepo;
-    private Scanner sc;
+    private final JdbcAccountRepository accountRepo;
+    private final JdbcMoonMissionRepository missionRepo;
+    private final Scanner sc;
 
-    static void main(String[] args) {
+    public Main(SimpleDriverManagerDataSource dataSource) {
+        this.accountRepo = new JdbcAccountRepository(dataSource);
+        this.missionRepo = new JdbcMoonMissionRepository(dataSource);
+        this.sc = new Scanner(System.in);
+    }
+
+    public static void main(String[] args) {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
         }
-        new Main().run();
+
+        String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
+        String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
+        String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
+
+        SimpleDriverManagerDataSource ds = new SimpleDriverManagerDataSource(jdbcUrl, dbUser, dbPass);
+
+        new Main(ds).run();
     }
 
     public void run() {
+        boolean authenticated = false;
+        String username = "";
 
+        // Loop until valid credentials
+        while (!authenticated) {
+            System.out.print("Enter your Username (or 0 to exit): ");
+            username = sc.nextLine();
+            if ("0".equals(username)) {
+                System.out.println("Exiting program.");
+                return;
+            }
 
-
-        dataSource = new SimpleDriverManagerDataSource();
-        accountRepo = new JdbcAccountRepository(dataSource);
-        missionRepo = new JdbcMoonMissionRepository(dataSource);
-        sc = new Scanner(System.in);
-
-
-
-
-        int choice;
-        do {
-            System.out.print("Enter your Username: ");
-            String username = sc.nextLine();
             System.out.print("Enter your password: ");
             String password = sc.nextLine();
 
             if (accountRepo.validateCredentials(username, password)) {
                 System.out.println("Welcome / Välkommen: " + username);
-                getOptions();
+                authenticated = true;
             } else {
-                System.out.println("Username or password was Incorrect. Press 0 to exit");
+                System.out.println("Invalid Username or Password. Try again or type 0 to exit.");
+            }
+        }
+
+
+        // Once authenticated, show menu until user exits
+        int choice;
+        do {
+            getOptions();
+
+            // safer input handling
+            String choiceStr = sc.nextLine();
+            try {
+                choice = Integer.parseInt(choiceStr);
+            } catch (NumberFormatException e) {
+                choice = -1; // invalid
             }
 
-            choice = sc.nextInt();
             options(choice);
         } while (choice != 0);
+
+        System.out.println("Goodbye, " + username + "!");
+    }
+
+    /**
+     * Reads configuration with precedence: Java system property first, then environment variable.
+     * Returns trimmed value or null if neither source provides a non-empty value.
+     */
+    private static String resolveConfig(String propertyKey, String envKey) {
+        String v = System.getProperty(propertyKey);
+        if (v == null || v.trim().isEmpty()) {
+            v = System.getenv(envKey);
+        }
+        return (v == null || v.trim().isEmpty()) ? null : v.trim();
     }
 
     /**
@@ -72,7 +106,7 @@ public class Main {
     public void getOptions() {
         System.out.println(
                 """
-                        You can choose from the following options:
+                        Select an option:
                         1 - List moon missions (prints spacecraft names from `moon_mission`).
                         2 - Get a moon mission by mission_id (prints details for that mission).
                         3 - Count missions for a given year (prompts: year; prints the number of missions launched that year).
@@ -143,6 +177,7 @@ public class Main {
             case 5:
                 System.out.println("Enter the userId of the account you would like to update your password for: ");
                 int userId = sc.nextInt();
+                sc.nextLine();
                 System.out.println("Enter your new password");
                 String newPassword = sc.nextLine();
 
@@ -156,6 +191,7 @@ public class Main {
             case 6:
                 System.out.println("Enter userID of the account u want deleted: ");
                 int userIdDelete = sc.nextInt();
+                sc.nextLine();
 
                 boolean isDeleted = accountRepo.deleteAccount(userIdDelete);
                 System.out.println(isDeleted ? "You account was successfully deleted!" : "Something went wrong deleting your account.");
