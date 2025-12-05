@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcMoonMissionRepository implements MoonMissionRepository {
 
@@ -38,7 +39,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository {
     }
 
     @Override
-    public MoonMission getMissionById(int missionId) {
+    public Optional<MoonMission> getMissionById(int missionId) {
         String sql = "SELECT * FROM moon_mission WHERE mission_id = ?";
 
         try (Connection connection = ds.getConnection();
@@ -56,13 +57,13 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository {
                     mission.setOutcome(rs.getString("outcome"));
                     mission.setMissionType(rs.getString("mission_type"));
                     mission.setOperator(rs.getString("operator"));
-                    return mission;
+                    return Optional.of(mission);
                 }
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error fetching mission by ID", e);
         }
-        return null;
+        return Optional.empty();
     }
 
     @Override
