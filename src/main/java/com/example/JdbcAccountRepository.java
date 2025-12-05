@@ -20,7 +20,7 @@ public class JdbcAccountRepository implements AccountRepository{
 
         try(
                 Connection connection= dataSource.getConnection();
-                PreparedStatement ps= connection.prepareStatement(sql);
+                PreparedStatement ps= connection.prepareStatement(sql)
                 ) {
                 ps.setString(1, username);
                 ps.setString(2, password);
@@ -32,6 +32,7 @@ public class JdbcAccountRepository implements AccountRepository{
                 }
 
         } catch (SQLException e){
+            System.err.println("Database error during login validation: " + e.getMessage());
             return false;
         }
 
@@ -41,7 +42,12 @@ public class JdbcAccountRepository implements AccountRepository{
 
     @Override
     public boolean createAccount(String firstName, String lastName, String ssn, String password) {
-        String sql= "INSERT INTO account (first_name, last_name, ssn, password) VALUES (?, ?, ?, ?)";
+
+        // concatenation of firstname and lastname to create username (name column in sql) for proper usage of the app.
+        String username = firstName.substring(0, Math.min(firstName.length(), 3)) +
+                lastName.substring(0, Math.min(lastName.length(), 3));
+
+        String sql= "INSERT INTO account (first_name, last_name, ssn, password, name) VALUES (?, ?, ?, ?, ?)";
 
         try(Connection connection= dataSource.getConnection();
             PreparedStatement ps= connection.prepareStatement(sql)){
@@ -50,6 +56,7 @@ public class JdbcAccountRepository implements AccountRepository{
             ps.setString(2, lastName);
             ps.setString(3, ssn);
             ps.setString(4, password);
+            ps.setString(5, username);
 
             int rowsAffected= ps.executeUpdate();
             return rowsAffected>0;

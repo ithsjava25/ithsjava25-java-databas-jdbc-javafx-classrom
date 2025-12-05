@@ -69,7 +69,7 @@ public class Main {
                 System.out.println("Login successful! ");
                 loggedIn=true;
             } else{
-                System.out.println(" Invalid username or password. ");
+                System.out.println(" Invalid username or password. Press 0 to exit or any other key to keep trying. ");
                 String choice= scanner.nextLine().trim();
                 if (choice.equals("0")){
                     return false;
@@ -109,13 +109,11 @@ public class Main {
             } catch (Exception e){
                 //to avoid numberFormat exceptions.
                 System.err.println(" An error occurred: " + e.getMessage());
-                scanner.nextLine();
+
             }
 
         }
     }
-
-
 
 
     private void listMoonMissions() {
