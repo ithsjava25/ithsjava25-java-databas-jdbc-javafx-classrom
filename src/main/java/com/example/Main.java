@@ -14,6 +14,7 @@ public class Main {
     }
 
     public void run() {
+        // Resolve database configuration
         String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
         String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
         String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
@@ -24,6 +25,7 @@ public class Main {
                             "as system properties (-Dkey=value) or environment variables.");
         }
 
+        // Test connection
         try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -31,6 +33,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
+        // Login flow
         System.out.print("Username: ");
         String username = scanner.nextLine().trim();
 
@@ -46,7 +49,37 @@ public class Main {
         }
 
         System.out.println("Login successful!");
+
+        // Menu loop
+        boolean running = true;
+        while (running) {
+            String choice = scanner.nextLine().trim();
+
+            if (choice.equals("1")) {
+                listMoonMissions(jdbcUrl, dbUser, dbPass);
+            } else if (choice.equals("0")) {
+                running = false;
+            }
+        }
+
         scanner.close();
+    }
+
+    // List all moon missions
+    private void listMoonMissions(String jdbcUrl, String dbUser, String dbPass) {
+        String sql = "SELECT spacecraft FROM moon_mission";
+
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                System.out.println(rs.getString("spacecraft"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Database error: " + e.getMessage());
+        }
     }
 
     private boolean validateLogin(String jdbcUrl, String dbUser, String dbPass,
