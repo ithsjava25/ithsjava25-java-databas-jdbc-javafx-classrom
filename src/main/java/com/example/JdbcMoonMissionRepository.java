@@ -52,7 +52,7 @@ public class JdbcMoonMissionRepository implements MoonMissionRepository{
                 if(rs.next()){
                     //Map to MoonMission object:
                     MoonMission mission= new MoonMission(
-                            rs.getInt("mission_id"),
+                            rs.getLong("mission_id"),
                             rs.getString("spacecraft"),
                             rs.getObject("launch_date", LocalDate.class),
                             rs.getString("carrier_rocket"),

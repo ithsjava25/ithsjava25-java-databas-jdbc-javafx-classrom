@@ -133,7 +133,7 @@ public class Main {
 
                 System.out.println("\nMission details for ID " + m.missionId() + ":");
                 System.out.println("  Name: " + m.spacecraft());
-                System.out.println("  Year: " + m.launch_date());
+                System.out.println("  Date: " + m.launch_date());
                 System.out.println("  Outcome: " + m.outcome());
                 System.out.println("  Carrier: " + m.carrier_rocket());
                 System.out.println("  Operator: " + m.operator());
