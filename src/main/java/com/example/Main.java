@@ -46,6 +46,7 @@ public class Main {
         if (!validateLogin(jdbcUrl, dbUser, dbPass, username, password)) {
             System.out.println("Invalid username or password.");
             System.out.println("0) Exit");
+            scanner.nextLine();
             scanner.close();
             return;
         }
@@ -136,8 +137,6 @@ public class Main {
                         System.out.println("Mission ID: " + rs.getLong("mission_id"));
                         System.out.println("Spacecraft: " + rs.getString("spacecraft"));
                         System.out.println("Launch Date: " + rs.getDate("launch_date"));
-                    } else {
-                        System.out.println("No mission found with ID: " + missionId);
                     }
                 }
             }
@@ -194,15 +193,19 @@ public class Main {
         System.out.print("Password: ");
         String password = scanner.nextLine().trim();
 
-        String sql = "INSERT INTO account (first_name, last_name, ssn, password) VALUES (?, ?, ?, ?)";
+        String username = firstName.substring(0, Math.min(3, firstName.length())) +
+                lastName.substring(0, Math.min(3, lastName.length()));
+
+        String sql = "INSERT INTO account (name, first_name, last_name, ssn, password) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, firstName);
-            stmt.setString(2, lastName);
-            stmt.setString(3, ssn);
-            stmt.setString(4, password);
+            stmt.setString(1, username);
+            stmt.setString(2, firstName);
+            stmt.setString(3, lastName);
+            stmt.setString(4, ssn);
+            stmt.setString(5, password);
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -237,8 +240,6 @@ public class Main {
                 int rowsAffected = stmt.executeUpdate();
                 if (rowsAffected > 0) {
                     System.out.println("Password updated successfully");
-                } else {
-                    System.out.println("No account found with user_id: " + userId);
                 }
             }
         } catch (NumberFormatException e) {
@@ -267,8 +268,6 @@ public class Main {
                 int rowsAffected = stmt.executeUpdate();
                 if (rowsAffected > 0) {
                     System.out.println("Account deleted successfully");
-                } else {
-                    System.out.println("No account found with user_id: " + userId);
                 }
             }
         } catch (NumberFormatException e) {
@@ -302,7 +301,11 @@ public class Main {
     }
 
     /**
-     * Checks if dev mode is enabled.
+     * Determines if the application is running in development mode based on system properties,
+     * environment variables, or command-line arguments.
+     *
+     * @param args an array of command-line arguments
+     * @return {@code true} if the application is in development mode; {@code false} otherwise
      */
     private static boolean isDevMode(String[] args) {
         if (Boolean.getBoolean("devMode"))
@@ -312,9 +315,9 @@ public class Main {
         return Arrays.asList(args).contains("--dev");
     }
 
-
     /**
-     * Gets config from system properties or environment variables.
+     * Reads configuration with precedence: Java system property first, then environment variable.
+     * Returns trimmed value or null if neither source provides a non-empty value.
      */
     private static String resolveConfig(String propertyKey, String envKey) {
         String v = System.getProperty(propertyKey);
