@@ -71,6 +71,9 @@ public class Main {
                 case "2":
                     getMissionById(scanner, jdbcUrl, dbUser, dbPass);
                     break;
+                case "3":
+                    countMissionsByYear(scanner, jdbcUrl, dbUser, dbPass);
+                    break;
                 case "0":
                     running = false;
                     break;
@@ -123,6 +126,34 @@ public class Main {
             }
         } catch (NumberFormatException e) {
             System.out.println("Invalid mission ID format");
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    // Count missions by year
+    private void countMissionsByYear(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
+        System.out.print("Enter year: ");
+        String input = scanner.nextLine().trim();
+
+        try {
+            int year = Integer.parseInt(input);
+            String sql = "SELECT COUNT(*) as count FROM moon_mission WHERE YEAR(launch_date) = ?";
+
+            try (Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                stmt.setInt(1, year);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int count = rs.getInt("count");
+                        System.out.println("Number of missions in " + year + ": " + count);
+                    }
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid year format");
         } catch (SQLException e) {
             System.err.println("Error: " + e.getMessage());
         }
