@@ -74,6 +74,9 @@ public class Main {
                 case "3":
                     countMissionsByYear(scanner, jdbcUrl, dbUser, dbPass);
                     break;
+                case "4":
+                    createAccount(scanner, jdbcUrl, dbUser, dbPass);
+                    break;
                 case "0":
                     running = false;
                     break;
@@ -154,6 +157,40 @@ public class Main {
             }
         } catch (NumberFormatException e) {
             System.out.println("Invalid year format");
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    // Create new account
+    private void createAccount(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
+        System.out.print("First name: ");
+        String firstName = scanner.nextLine().trim();
+
+        System.out.print("Last name: ");
+        String lastName = scanner.nextLine().trim();
+
+        System.out.print("SSN: ");
+        String ssn = scanner.nextLine().trim();
+
+        System.out.print("Password: ");
+        String password = scanner.nextLine().trim();
+
+        String sql = "INSERT INTO account (first_name, last_name, ssn, password) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, ssn);
+            stmt.setString(4, password);
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("Account created successfully");
+            }
+
         } catch (SQLException e) {
             System.err.println("Error: " + e.getMessage());
         }
