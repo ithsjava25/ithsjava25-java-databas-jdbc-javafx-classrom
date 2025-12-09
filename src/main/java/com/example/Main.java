@@ -46,7 +46,6 @@ public class Main {
         if (!validateLogin(jdbcUrl, dbUser, dbPass, username, password)) {
             System.out.println("Invalid username or password.");
             System.out.println("0) Exit");
-            scanner.nextLine();
             scanner.close();
             return;
         }
@@ -137,6 +136,8 @@ public class Main {
                         System.out.println("Mission ID: " + rs.getLong("mission_id"));
                         System.out.println("Spacecraft: " + rs.getString("spacecraft"));
                         System.out.println("Launch Date: " + rs.getDate("launch_date"));
+                    } else {
+                        System.out.println("No mission found with ID: " + missionId);
                     }
                 }
             }
@@ -236,6 +237,8 @@ public class Main {
                 int rowsAffected = stmt.executeUpdate();
                 if (rowsAffected > 0) {
                     System.out.println("Password updated successfully");
+                } else {
+                    System.out.println("No account found with user_id: " + userId);
                 }
             }
         } catch (NumberFormatException e) {
@@ -264,6 +267,8 @@ public class Main {
                 int rowsAffected = stmt.executeUpdate();
                 if (rowsAffected > 0) {
                     System.out.println("Account deleted successfully");
+                } else {
+                    System.out.println("No account found with user_id: " + userId);
                 }
             }
         } catch (NumberFormatException e) {
@@ -296,6 +301,9 @@ public class Main {
         }
     }
 
+    /**
+     * Checks if dev mode is enabled.
+     */
     private static boolean isDevMode(String[] args) {
         if (Boolean.getBoolean("devMode"))
             return true;
@@ -304,6 +312,10 @@ public class Main {
         return Arrays.asList(args).contains("--dev");
     }
 
+
+    /**
+     * Gets config from system properties or environment variables.
+     */
     private static String resolveConfig(String propertyKey, String envKey) {
         String v = System.getProperty(propertyKey);
         if (v == null || v.trim().isEmpty()) {
