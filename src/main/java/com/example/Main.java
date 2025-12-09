@@ -13,6 +13,9 @@ public class Main {
         new Main().run();
     }
 
+    /**
+     * Runs the main application with login and menu.
+     */
     public void run() {
         // Resolve database configuration
         String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
@@ -94,7 +97,9 @@ public class Main {
         scanner.close();
     }
 
-    // List all moon missions
+    /**
+     * Lists all spacecraft from moon_mission table.
+     */
     private void listMoonMissions(String jdbcUrl, String dbUser, String dbPass) {
         String sql = "SELECT spacecraft FROM moon_mission ORDER BY mission_id";
 
@@ -111,7 +116,9 @@ public class Main {
         }
     }
 
-    // Get mission by ID
+    /**
+     * Gets a specific mission by ID and prints details.
+     */
     private void getMissionById(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
         System.out.print("Enter mission_id: ");
         String input = scanner.nextLine().trim();
@@ -140,7 +147,9 @@ public class Main {
         }
     }
 
-    // Count missions by year
+    /**
+     * Counts how many missions were launched in a specific year.
+     */
     private void countMissionsByYear(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
         System.out.print("Enter year: ");
         String input = scanner.nextLine().trim();
@@ -168,7 +177,9 @@ public class Main {
         }
     }
 
-    // Create new account
+    /**
+     * Creates a new account in the database.
+     */
     private void createAccount(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
         System.out.print("First name: ");
         String firstName = scanner.nextLine().trim();
@@ -202,7 +213,9 @@ public class Main {
         }
     }
 
-    // Update account password
+    /**
+     * Updates password for an existing account.
+     */
     private void updateAccountPassword(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
         System.out.print("Enter user_id: ");
         String input = scanner.nextLine().trim();
@@ -232,7 +245,9 @@ public class Main {
         }
     }
 
-    // Delete account
+    /**
+     * Deletes an account from the database.
+     */
     private void deleteAccount(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
         System.out.print("Enter user_id to delete: ");
         String input = scanner.nextLine().trim();
@@ -258,7 +273,9 @@ public class Main {
         }
     }
 
-    // Validate user credentials
+    /**
+     * Checks if username and password are correct.
+     */
     private boolean validateLogin(String jdbcUrl, String dbUser, String dbPass,
                                   String username, String password) {
         String sql = "SELECT user_id FROM account WHERE name = ? AND password = ?";
