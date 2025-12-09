@@ -77,6 +77,12 @@ public class Main {
                 case "4":
                     createAccount(scanner, jdbcUrl, dbUser, dbPass);
                     break;
+                case "5":
+                    updateAccountPassword(scanner, jdbcUrl, dbUser, dbPass);
+                    break;
+                case "6":
+                    deleteAccount(scanner, jdbcUrl, dbUser, dbPass);
+                    break;
                 case "0":
                     running = false;
                     break;
@@ -191,6 +197,62 @@ public class Main {
                 System.out.println("Account created successfully");
             }
 
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    // Update account password
+    private void updateAccountPassword(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
+        System.out.print("Enter user_id: ");
+        String input = scanner.nextLine().trim();
+
+        System.out.print("Enter new password: ");
+        String newPassword = scanner.nextLine().trim();
+
+        try {
+            long userId = Long.parseLong(input);
+            String sql = "UPDATE account SET password = ? WHERE user_id = ?";
+
+            try (Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                stmt.setString(1, newPassword);
+                stmt.setLong(2, userId);
+
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Password updated successfully");
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid user ID format");
+        } catch (SQLException e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    // Delete account
+    private void deleteAccount(Scanner scanner, String jdbcUrl, String dbUser, String dbPass) {
+        System.out.print("Enter user_id to delete: ");
+        String input = scanner.nextLine().trim();
+
+        try {
+            long userId = Long.parseLong(input);
+            String sql = "DELETE FROM account WHERE user_id = ?";
+
+            try (Connection conn = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                stmt.setLong(1, userId);
+
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Account deleted successfully");
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid user ID format");
         } catch (SQLException e) {
             System.err.println("Error: " + e.getMessage());
         }
