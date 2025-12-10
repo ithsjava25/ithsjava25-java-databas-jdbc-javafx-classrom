@@ -1,13 +1,16 @@
 package com.example;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
+import java.util.Scanner;
 
-public class Main {
+public class
+Main {
 
-    static void main(String[] args) {
+    private Connection connection; // Koppla upp mot databas
+
+
+    public static void main(String[] args) {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
         }
@@ -15,6 +18,7 @@ public class Main {
     }
 
     public void run() {
+
         // Resolve DB settings with precedence: System properties -> Environment variables
         String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
         String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
@@ -26,12 +30,225 @@ public class Main {
                             "as system properties (-Dkey=value) or environment variables.");
         }
 
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
+        // Connection, sparas i instansvariabel
+        try {
+            this.connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+            System.out.println("Connected to database successfully.");
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not connect to database", e);
+        }
+
+        //Todo: Starting point for your code
+
+        Scanner scanner = new Scanner(System.in);
+
+        // todo: Log in loop
+        while (true) {
+            System.out.print("Username (or 0 to exit): ");
+            String username = scanner.nextLine();
+            if (username.equals("0")) return;
+
+            System.out.print("Password (or 0 to exit): ");
+            String password = scanner.nextLine();
+            if (password.equals("0")) return;
+
+            if (login(username, password)) {
+                break;
+            } else {
+                System.out.println("Invalid username or password");
+            }
+        }
+
+        // todo: menu after successfully logged in
+        boolean running = true;
+
+        while (running) {
+            printMenu();
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1" -> listMoonMissions();
+                case "2" -> getMoonMissionById(scanner);
+                case "3" -> countMissionsByYear(scanner);
+                case "4" -> createAccount(scanner);
+                case "5" -> updatePassword(scanner);
+                case "6" -> deleteAccount(scanner);
+                case "0" -> running = false;
+                default -> System.out.println("invalid");
+            }
+        }
+    }
+
+
+    // todo: LOGIN uses column `name` created from CONCAT in init.sql
+    private boolean login(String username, String password) {
+        String sql = "SELECT * FROM account WHERE name = ? AND password = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Login failed", e);
+        }
+    }
+
+
+    // todo: print CLI menu
+    private void printMenu() {
+        System.out.println(" ---> MENU <--- ");
+        System.out.println("1) List moon missions");
+        System.out.println("2) Get moon mission");
+        System.out.println("3) Count missions by year");
+        System.out.println("4) Create account");
+        System.out.println("5) Update account password");
+        System.out.println("6) Delete account");
+        System.out.println("0) Exit");
+    }
+
+    // todo: choice 1 - List moon missions
+    private void listMoonMissions() {
+        String sql = "SELECT spacecraft FROM moon_mission";
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                System.out.println(rs.getString("spacecraft"));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not list missions", e);
+        }
+    }
+
+    // todo: choice 2 - Get mission by ID
+    private void getMoonMissionById(Scanner scanner) {
+        System.out.print("mission_id: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        String sql = "SELECT * FROM moon_mission WHERE mission_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println(
+                        rs.getInt("mission_id") + " " +
+                                rs.getString("spacecraft") + " " +
+                                rs.getString("launch_date")
+                );
+                System.out.println("------------");
+            } else {
+                System.out.println("Invalid username or password");
+            }
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        //Todo: Starting point for your code
     }
+
+
+    // todo: choice 3 - Count missions by year
+    private void countMissionsByYear(Scanner scanner) {
+        System.out.print("Total missions for 2019: ");
+        int year = Integer.parseInt(scanner.nextLine());
+
+        String sql = "SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            System.out.println(rs.getInt(1));
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //todo: Choice 4 - Add costumer method.
+    private void createAccount(Scanner scanner) {
+        System.out.print("first name: ");
+        String first = scanner.nextLine();
+
+        System.out.print("last name: ");
+        String last = scanner.nextLine();
+
+        System.out.print("ssn: ");
+        String ssn = scanner.nextLine();
+
+        System.out.print("password: ");
+        String pw = scanner.nextLine();
+
+        String sql = """
+                INSERT INTO account (first_name, last_name, ssn, password)
+                VALUES (?, ?, ?, ?)
+                """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, first);
+            stmt.setString(2, last);
+            stmt.setString(3, ssn);
+            stmt.setString(4, pw);
+            stmt.executeUpdate();
+
+            System.out.println("created");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    // todo: Choice - 5 Update password method
+    private void updatePassword(Scanner scanner) {
+        System.out.print("user_id: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("new password: ");
+        String newPw = scanner.nextLine();
+
+        String sql = "UPDATE account SET password = ? WHERE user_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, newPw);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
+
+            System.out.println("updated");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // todo: Choice 6 - Delete account method
+    private void deleteAccount(Scanner scanner) {
+        System.out.print("user_id: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        String sql = "DELETE FROM account WHERE user_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+
+            System.out.println("deleted");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+
+
 
     /**
      * Determines if the application is running in development mode based on system properties,
