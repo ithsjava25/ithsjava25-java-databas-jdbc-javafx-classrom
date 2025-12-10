@@ -123,12 +123,12 @@ public class Main {
                                     break;
                                 case 3:
                                     System.out.println("Executing: 3) Count missions for a given year...");
-                                    // Todo: Prompt for year, then SQL SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?
                                     countingMissionsForAGivenYear(connection, scanner);
                                     break;
                                 case 4:
                                     System.out.println("Executing: 4) Create an account...");
                                     // Todo: Prompt for first name, last name, ssn, password, then SQL INSERT INTO account (...) VALUES (...)
+                                    createAnAccount(connection, scanner);
                                     break;
                                 case 5:
                                     System.out.println("Executing: 5) Update an account password...");
@@ -162,6 +162,37 @@ public class Main {
         //Todo: Starting point for your code
 
 
+    }
+
+    private void createAnAccount(Connection connection, Scanner scanner) {
+        System.out.println("Creating an account...");
+        System.out.print("Enter first name: ");
+        String firstName = scanner.nextLine().trim();
+        System.out.print("Enter last name: ");
+        String lastName = scanner.nextLine().trim();
+        System.out.print("Enter ssn: ");
+        String ssn = scanner.nextLine().trim();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine().trim();
+        String name = firstName.substring(0,3) + lastName.substring(0,3);
+
+        String sql = "INSERT INTO account (first_name, last_name, ssn, password, name) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, ssn);
+            stmt.setString(4, password);
+            stmt.setString(5, name);
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("Successfully created an account for " + firstName + " " + lastName);
+            } else
+                System.out.println("Failed to create an account.");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Database operation failed. " + e.getMessage());
+        }
     }
 
     private void countingMissionsForAGivenYear(Connection connection, Scanner scanner) {
