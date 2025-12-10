@@ -56,107 +56,115 @@ public class Main {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
              Scanner scanner = new Scanner(System.in)) {
 
-            System.out.print("Username: ");
-            if (!scanner.hasNextLine()) {
-                return; // Hantera EOF i testmiljön
+            String loggedInUser = authenticateUser(connection, scanner);
+            if (loggedInUser == null) {
+                System.out.println("Invalid username or password. Exiting");
+                return;
             }
-            String username = scanner.nextLine().trim();
+            System.out.println("\nWelcome, " + loggedInUser + "!");
+            boolean running = true;
+            while (running) {
+                System.out.println("""
+                        
+                           Press a number for  next assignment:
+                        
+                           1) List moon missions (prints spacecraft names from `moon_mission`).
+                           2) Get a moon mission by mission_id (prints details for that mission).
+                           3) Count missions for a given year (prompts: year; prints the number of missions launched that year).
+                           4) Create an account (prompts: first name, last name, ssn, password; prints confirmation).
+                           5) Update an account password (prompts: user_id, new password; prints confirmation).
+                           6) Delete an account (prompts: user_id; prints confirmation).
+                           0) Exit.
+                        """);
 
-            System.out.print("Password: ");
-            if (!scanner.hasNextLine()) {
-                return; // Hantera EOF i testmiljön
-            }
-            String password = scanner.nextLine().trim();
+                System.out.print("Choose (0-6): ");
+                if (!scanner.hasNextLine()) {
+                    running = false;
+                    break;
+                }
+                String choiceStr = scanner.nextLine().trim();
 
-            String sql = " select name from account where name = ? and password = ? ";
-
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-                stmt.setString(1, username);
-                stmt.setString(2, password);
-
-                try (ResultSet rs = stmt.executeQuery()) {
-
-                    if (rs.next()) {
-
-                        boolean running = true;
-                        while (running) {
-                            System.out.println("""
-                                    
-                                       Press a number for  next assignment:
-                                    
-                                       1) List moon missions (prints spacecraft names from `moon_mission`).
-                                       2) Get a moon mission by mission_id (prints details for that mission).
-                                       3) Count missions for a given year (prompts: year; prints the number of missions launched that year).
-                                       4) Create an account (prompts: first name, last name, ssn, password; prints confirmation).
-                                       5) Update an account password (prompts: user_id, new password; prints confirmation).
-                                       6) Delete an account (prompts: user_id; prints confirmation).
-                                       0) Exit.
-                                    """);
-
-                            System.out.print("Choose (0-6): ");
-                            if (!scanner.hasNextLine()) {
-                                running = false;
-                                break;
-                            }
-                            String choiceStr = scanner.nextLine().trim();
-
-                            int choice;
-                            try {
-                                choice = Integer.parseInt(choiceStr);
-                            } catch (NumberFormatException e) {
-                                System.out.println("Invalid input. Please enter a number (0-6).");
-                                continue;
-                            }
-                            switch (choice) {
-                                case 0:
-                                    System.out.println("Exiting application. Goodbye!");
-                                    running = false;
-                                    break;
-                                case 1:
-                                    System.out.println("Executing: 1) List moon missions...");
-                                    listMoonMissions(connection);
-                                    break;
-                                case 2:
-                                    System.out.println("Executing: 2) Get a moon mission by mission_id...");
-                                    moonMissionsById(connection, scanner);
-                                    break;
-                                case 3:
-                                    System.out.println("Executing: 3) Count missions for a given year...");
-                                    countingMissionsForAGivenYear(connection, scanner);
-                                    break;
-                                case 4:
-                                    System.out.println("Executing: 4) Create an account...");
-                                    createAnAccount(connection, scanner);
-                                    break;
-                                case 5:
-                                    System.out.println("Executing: 5) Update an account password...");
-                                    updateAccountPassword(connection, scanner);
-                                    break;
-                                case 6:
-                                    System.out.println("Executing: 6) Delete an account...");
-                                    // Todo: Prompt for user_id, then SQL DELETE FROM account WHERE user_id = ?
-                                    deleteAccount(connection, scanner);
-                                    break;
-                                default:
-                                    System.out.println("Invalid choice. Please enter a number between 0 and 6.");
-
-                            }
-                        }
-                    } else {
-                        System.out.println("Invalid username or password. Exiting");
-
-                    }
+                int choice;
+                try {
+                    choice = Integer.parseInt(choiceStr);
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please enter a number (0-6).");
+                    continue;
                 }
 
+                switch (choice) {
+                    case 0:
+                        System.out.println("Exiting application. Goodbye!");
+                        running = false;
+                        break;
+                    case 1:
+                        System.out.println("Executing: 1) List moon missions...");
+                        listMoonMissions(connection);
+                        break;
+                    case 2:
+                        System.out.println("Executing: 2) Get a moon mission by mission_id...");
+                        moonMissionsById(connection, scanner);
+                        break;
+                    case 3:
+                        System.out.println("Executing: 3) Count missions for a given year...");
+                        countingMissionsForAGivenYear(connection, scanner);
+                        break;
+                    case 4:
+                        System.out.println("Executing: 4) Create an account...");
+                        createAnAccount(connection, scanner);
+                        break;
+                    case 5:
+                        System.out.println("Executing: 5) Update an account password...");
+                        updateAccountPassword(connection, scanner);
+                        break;
+                    case 6:
+                        System.out.println("Executing: 6) Delete an account...");
+                        deleteAccount(connection, scanner);
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Please enter a number between 0 and 6.");
+
+                }
             }
 
         } catch (SQLException e) {
             throw new RuntimeException("Database operation failed. " + e.getMessage());
         }
         //Todo: Starting point for your code
-
-
     }
+
+
+    private String authenticateUser(Connection connection, Scanner scanner) {
+        System.out.print("Username: ");
+        if (!scanner.hasNextLine()) {
+            return null; // Hantera EOF i testmiljön
+        }
+        String username = scanner.nextLine().trim();
+
+        System.out.print("Password: ");
+        if (!scanner.hasNextLine()) {
+            return null; // Hantera EOF i testmiljön
+        }
+        String password = scanner.nextLine().trim();
+
+        String sql = " select name from account where name = ? and password = ? ";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("name");
+                } else {
+                    return null;
+                }
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
 
     private void deleteAccount(Connection connection, Scanner scanner) {
         System.out.println("Enter user id, that you wish to delete: ");
@@ -302,8 +310,6 @@ public class Main {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     private void listMoonMissions(Connection connection) {
