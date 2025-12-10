@@ -227,6 +227,23 @@ Main {
     }
 
     // todo: Choice 6 - Delete account method
+    private void deleteAccount(Scanner scanner) {
+        System.out.print("user_id: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        String sql = "DELETE FROM account WHERE user_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+
+            System.out.println("deleted");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
 
 
