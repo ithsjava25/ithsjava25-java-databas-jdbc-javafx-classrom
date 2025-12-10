@@ -171,7 +171,45 @@ Main {
     }
 
     //todo: Choice 4 - Add costumer method.
-   
+    private void createAccount(Scanner scanner) {
+        System.out.print("first name: ");
+        String first = scanner.nextLine();
+
+        System.out.print("last name: ");
+        String last = scanner.nextLine();
+
+        System.out.print("ssn: ");
+        String ssn = scanner.nextLine();
+
+        System.out.print("password: ");
+        String pw = scanner.nextLine();
+
+        String sql = """
+                INSERT INTO account (first_name, last_name, ssn, password)
+                VALUES (?, ?, ?, ?)
+                """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, first);
+            stmt.setString(2, last);
+            stmt.setString(3, ssn);
+            stmt.setString(4, pw);
+            stmt.executeUpdate();
+
+            System.out.println("created");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    // todo: Choice - 5 Update password method
+    private void updatePassword(Scanner scanner) {
+    }
+
+    // todo: Choice 6 - Delete account method
+
 
 
 
