@@ -53,21 +53,20 @@ public class Main {
                             "as system properties (-Dkey=value) or environment variables.");
         }
 
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
-
-            Scanner scanner = new Scanner(System.in);
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+             Scanner scanner = new Scanner(System.in)) {
 
             System.out.print("Username: ");
             if (!scanner.hasNextLine()) {
                 return; // Hantera EOF i testmiljön
             }
-            String username = scanner.nextLine();
+            String username = scanner.nextLine().trim();
 
             System.out.print("Password: ");
             if (!scanner.hasNextLine()) {
                 return; // Hantera EOF i testmiljön
             }
-            String password = scanner.nextLine();
+            String password = scanner.nextLine().trim();
 
             String sql = " select name from account where name = ? and password = ? ";
 
@@ -94,8 +93,8 @@ public class Main {
                                        0) Exit.
                                     """);
 
-                            System.out.println("Choose (0-6): ");
-                            if (!scanner.hasNextInt()) {
+                            System.out.print("Choose (0-6): ");
+                            if (!scanner.hasNextLine()) {
                                 running = false;
                                 break;
                             }
@@ -136,7 +135,7 @@ public class Main {
                                 case 6:
                                     System.out.println("Executing: 6) Delete an account...");
                                     // Todo: Prompt for user_id, then SQL DELETE FROM account WHERE user_id = ?
-                                   deleteAccount(connection, scanner);
+                                    deleteAccount(connection, scanner);
                                     break;
                                 default:
                                     System.out.println("Invalid choice. Please enter a number between 0 and 6.");
@@ -144,16 +143,11 @@ public class Main {
                             }
                         }
                     } else {
-                        System.out.println("Invalid username or password");
-                        System.out.println("Exit by pressing '0'");
-                        String exit = scanner.nextLine();
-                        if (exit.equals("0")) {
-                            System.exit(0);
+                        System.out.println("Invalid username or password. Exiting");
 
-                        }
                     }
-
                 }
+
             }
 
         } catch (SQLException e) {
@@ -166,7 +160,9 @@ public class Main {
 
     private void deleteAccount(Connection connection, Scanner scanner) {
         System.out.println("Enter user id, that you wish to delete: ");
-        if (!scanner.hasNextLine()) { return; }
+        if (!scanner.hasNextLine()) {
+            return;
+        }
         String userId = scanner.nextLine();
 
         String sql = " delete from account where user_id = ? ";
@@ -176,7 +172,7 @@ public class Main {
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
                 System.out.println("Successfully deleted the account.");
-            } else  {
+            } else {
                 System.out.println("Failed to delete the account.");
             }
         } catch (SQLException e) {
@@ -186,10 +182,14 @@ public class Main {
 
     private void updateAccountPassword(Connection connection, Scanner scanner) {
         System.out.println("Enter user_id: ");
-        if (!scanner.hasNextLine()) { return; }
+        if (!scanner.hasNextLine()) {
+            return;
+        }
         String userId = scanner.nextLine();
         System.out.println("Enter new password: ");
-        if (!scanner.hasNextLine()) { return; }
+        if (!scanner.hasNextLine()) {
+            return;
+        }
         String newPassword = scanner.nextLine();
 
         String sql = " update account set password = ? where user_id = ? ";
@@ -201,12 +201,13 @@ public class Main {
 
             if (affectedRows > 0) {
                 System.out.println("Account updated successfully.");
-            } else  {
+            } else {
                 System.out.println("Failed to update account.");
             }
 
-        } catch (SQLException e){
-            System.out.println("Failed to update account.");
+        } catch (SQLException e) {
+            System.err.println("ERROR: Failed to update password.");
+            throw new RuntimeException("Database operation failed. " + e.getMessage());
         }
     }
 
@@ -220,7 +221,7 @@ public class Main {
         String ssn = scanner.nextLine().trim();
         System.out.print("Enter password: ");
         String password = scanner.nextLine().trim();
-        String name = firstName.substring(0,3) + lastName.substring(0,3);
+        String name = firstName.substring(0, 3) + lastName.substring(0, 3);
 
         String sql = "INSERT INTO account (first_name, last_name, ssn, password, name) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -249,21 +250,21 @@ public class Main {
             return;
         }
         int year = scanner.nextInt();
-            scanner.nextLine();
+        scanner.nextLine();
 
         String sql = " select count(*) as mission_count from moon_mission where year(launch_date) = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-                stmt.setInt(1, year);
+            stmt.setInt(1, year);
 
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        int count = rs.getInt("mission_count");
-                        System.out.println("Mission count for year: " + year);
-                        System.out.println("Number of moon missions: " + count );
-                    } else
-                        System.out.println("No moon missions for year: " + year);
-                }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt("mission_count");
+                    System.out.println("Mission count for year: " + year);
+                    System.out.println("Number of moon missions: " + count);
+                } else
+                    System.out.println("No moon missions for year: " + year);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
