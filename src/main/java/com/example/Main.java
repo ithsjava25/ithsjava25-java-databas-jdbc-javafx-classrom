@@ -9,6 +9,9 @@ import java.util.Arrays;
 public class
 Main {
 
+    private Connection connection; // Koppla upp mot databas
+
+
     public static void main(String[] args) {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
@@ -17,6 +20,7 @@ Main {
     }
 
     public void run() {
+
         // Resolve DB settings with precedence: System properties -> Environment variables
         String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
         String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
@@ -28,10 +32,15 @@ Main {
                             "as system properties (-Dkey=value) or environment variables.");
         }
 
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
+        // Connection, sparas i instansvariabel
+        try {
+            this.connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
+            System.out.println("Connected to DB!");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Could not connect to DB", e);
         }
+
+
         //Todo: Starting point for your code
         Console console = System.console();
         String uName;
