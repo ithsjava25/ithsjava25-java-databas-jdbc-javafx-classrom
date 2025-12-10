@@ -206,10 +206,27 @@ Main {
 
     // todo: Choice - 5 Update password method
     private void updatePassword(Scanner scanner) {
+        System.out.print("user_id: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("new password: ");
+        String newPw = scanner.nextLine();
+
+        String sql = "UPDATE account SET password = ? WHERE user_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, newPw);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
+
+            System.out.println("updated");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // todo: Choice 6 - Delete account method
-
 
 
 
