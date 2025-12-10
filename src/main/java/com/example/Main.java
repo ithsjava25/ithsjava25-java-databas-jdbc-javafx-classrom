@@ -127,16 +127,16 @@ public class Main {
                                     break;
                                 case 4:
                                     System.out.println("Executing: 4) Create an account...");
-                                    // Todo: Prompt for first name, last name, ssn, password, then SQL INSERT INTO account (...) VALUES (...)
                                     createAnAccount(connection, scanner);
                                     break;
                                 case 5:
                                     System.out.println("Executing: 5) Update an account password...");
-                                    // Todo: Prompt for user_id, new password, then SQL UPDATE account SET password = ? WHERE user_id = ?
+                                    updateAccountPassword(connection, scanner);
                                     break;
                                 case 6:
                                     System.out.println("Executing: 6) Delete an account...");
                                     // Todo: Prompt for user_id, then SQL DELETE FROM account WHERE user_id = ?
+                                   deleteAccount(connection, scanner);
                                     break;
                                 default:
                                     System.out.println("Invalid choice. Please enter a number between 0 and 6.");
@@ -162,6 +162,52 @@ public class Main {
         //Todo: Starting point for your code
 
 
+    }
+
+    private void deleteAccount(Connection connection, Scanner scanner) {
+        System.out.println("Enter user id, that you wish to delete: ");
+        if (!scanner.hasNextLine()) { return; }
+        String userId = scanner.nextLine();
+
+        String sql = " delete from account where user_id = ? ";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, userId);
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                System.out.println("Successfully deleted the account.");
+            } else  {
+                System.out.println("Failed to delete the account.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Database operation failed. " + e.getMessage());
+        }
+    }
+
+    private void updateAccountPassword(Connection connection, Scanner scanner) {
+        System.out.println("Enter user_id: ");
+        if (!scanner.hasNextLine()) { return; }
+        String userId = scanner.nextLine();
+        System.out.println("Enter new password: ");
+        if (!scanner.hasNextLine()) { return; }
+        String newPassword = scanner.nextLine();
+
+        String sql = " update account set password = ? where user_id = ? ";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, newPassword);
+            stmt.setString(2, userId);
+
+            int affectedRows = stmt.executeUpdate();
+
+            if (affectedRows > 0) {
+                System.out.println("Account updated successfully.");
+            } else  {
+                System.out.println("Failed to update account.");
+            }
+
+        } catch (SQLException e){
+            System.out.println("Failed to update account.");
+        }
     }
 
     private void createAnAccount(Connection connection, Scanner scanner) {
@@ -260,7 +306,7 @@ public class Main {
     }
 
     private void listMoonMissions(Connection connection) {
-        String sql = "select spacecraft from moon_mission order by spacecraft";
+        String sql = " select spacecraft from moon_mission order by spacecraft ";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             boolean found = false;
