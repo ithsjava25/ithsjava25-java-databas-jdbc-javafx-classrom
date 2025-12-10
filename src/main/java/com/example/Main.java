@@ -1,13 +1,15 @@
 package com.example;
 
+import java.io.Console;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-public class Main {
+public class
+Main {
 
-    static void main(String[] args) {
+    public static void main(String[] args) {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
         }
@@ -31,6 +33,25 @@ public class Main {
             throw new RuntimeException(e);
         }
         //Todo: Starting point for your code
+        Console console = System.console();
+        String uName;
+        String pWord;
+
+        if (console != null) {
+            uName = console.readLine("Username: ");
+            char[] pwChars = console.readPassword("Password: ");
+            pWord = new String(pwChars);
+        } else {
+            // IntelliJ fallback (du är här nu!)
+            System.out.print("Username: ");
+            uName = new java.util.Scanner(System.in).nextLine();
+
+            System.out.print("Password: ");
+            pWord = new java.util.Scanner(System.in).nextLine();
+        }
+
+        System.out.println("You entered username: " + uName);
+
     }
 
     /**
