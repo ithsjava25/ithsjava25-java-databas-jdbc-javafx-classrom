@@ -68,12 +68,12 @@ public class Main {
                         
                            Press a number for  next assignment:
                         
-                           1) List moon missions (prints spacecraft names from `moon_mission`).
-                           2) Get a moon mission by mission_id (prints details for that mission).
-                           3) Count missions for a given year (prompts: year; prints the number of missions launched that year).
-                           4) Create an account (prompts: first name, last name, ssn, password; prints confirmation).
-                           5) Update an account password (prompts: user_id, new password; prints confirmation).
-                           6) Delete an account (prompts: user_id; prints confirmation).
+                           1) List moon missions.
+                           2) Get a moon mission.
+                           3) Count missions for a given year.
+                           4) Create an account.
+                           5) Update an account password.
+                           6) Delete an account.
                            0) Exit.
                         """);
 
@@ -123,14 +123,12 @@ public class Main {
                         break;
                     default:
                         System.out.println("Invalid choice. Please enter a number between 0 and 6.");
-
                 }
             }
 
         } catch (SQLException e) {
             throw new RuntimeException("Database operation failed. " + e.getMessage());
         }
-        //Todo: Starting point for your code
     }
 
 
@@ -166,23 +164,116 @@ public class Main {
     }
 
 
-    private void deleteAccount(Connection connection, Scanner scanner) {
-        System.out.println("Enter user id, that you wish to delete: ");
+    private void listMoonMissions(Connection connection) {
+        String sql = " select spacecraft from moon_mission order by spacecraft ";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            boolean found = false;
+            while (rs.next()) {
+                System.out.println(rs.getString("spacecraft"));
+                found = true;
+            }
+            if (!found) {
+                System.out.println("No moon missions found.");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error executing List Moon Missions: " + e.getMessage(), e);
+        }
+    }
+
+    private void moonMissionsById(Connection connection, Scanner scanner) {
+        System.out.println("Enter moon mission id: ");
         if (!scanner.hasNextLine()) {
             return;
         }
-        String userId = scanner.nextLine();
+        String missionId = scanner.nextLine().trim();
+        long id;
+        try {
+            id = Long.parseLong(missionId);
+        } catch (NumberFormatException e) {
+        System.out.println("Invalid moon mission id. Please enter a number");
+        return;
+    }
 
-        String sql = " delete from account where user_id = ? ";
+        String sql = "select spacecraft, mission_id, mission_type, launch_date from moon_mission where mission_id = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, userId);
+            stmt.setLong(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    System.out.println("ID: " + rs.getLong("mission_id"));
+                    System.out.println("Spacecraft: " + rs.getString("spacecraft"));
+                    System.out.println("Mission type: " + rs.getString("mission_type"));
+                    System.out.println("Launch date: " + rs.getString("launch_date"));
+                } else {
+                    System.out.println("Mission id " + missionId + " not found. Please enter a number");
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void countingMissionsForAGivenYear(Connection connection, Scanner scanner) {
+        System.out.println("Enter year: ");
+        if (!scanner.hasNextInt()) {
+            scanner.nextLine();
+            System.out.println("Invalid year");
+            return;
+        }
+        int year = scanner.nextInt();
+        scanner.nextLine();
+
+        String sql = " select count(*) as mission_count from moon_mission where year(launch_date) = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt("mission_count");
+                    System.out.println("Mission count for year: " + year);
+                    System.out.println("Number of moon missions: " + count);
+                } else
+                    System.out.println("No moon missions for year: " + year);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void createAnAccount(Connection connection, Scanner scanner) {
+        System.out.println("Creating an account...");
+        System.out.print("Enter first name: ");
+        if (!scanner.hasNextLine()) {return;}
+        String firstName = scanner.nextLine().trim();
+        if (firstName.length() < 3) { throw new IllegalArgumentException("First name must be at least 3 characters long."); }
+        System.out.print("Enter last name: ");
+        if (!scanner.hasNextLine()) {return;}
+        String lastName = scanner.nextLine().trim();
+        if (lastName.length() < 3) { throw new IllegalArgumentException("First name must be at least 3 characters long."); }
+        System.out.print("Enter ssn: ");
+        String ssn = scanner.nextLine().trim();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine().trim();
+        String name = firstName.substring(0, 3) + lastName.substring(0, 3);
+
+        String sql = "INSERT INTO account (first_name, last_name, ssn, password, name) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, firstName);
+            stmt.setString(2, lastName);
+            stmt.setString(3, ssn);
+            stmt.setString(4, password);
+            stmt.setString(5, name);
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                System.out.println("Successfully deleted the account.");
-            } else {
-                System.out.println("Failed to delete the account.");
-            }
+                System.out.println("Successfully created an account for " + firstName + " " + lastName);
+            } else
+                System.out.println("Failed to create an account.");
+
         } catch (SQLException e) {
             throw new RuntimeException("Database operation failed. " + e.getMessage());
         }
@@ -219,114 +310,25 @@ public class Main {
         }
     }
 
-    private void createAnAccount(Connection connection, Scanner scanner) {
-        System.out.println("Creating an account...");
-        System.out.print("Enter first name: ");
-        String firstName = scanner.nextLine().trim();
-        System.out.print("Enter last name: ");
-        String lastName = scanner.nextLine().trim();
-        System.out.print("Enter ssn: ");
-        String ssn = scanner.nextLine().trim();
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine().trim();
-        String name = firstName.substring(0, 3) + lastName.substring(0, 3);
+    private void deleteAccount(Connection connection, Scanner scanner) {
+        System.out.println("Enter user id, that you wish to delete: ");
+        if (!scanner.hasNextLine()) {
+            return;
+        }
+        String userId = scanner.nextLine();
 
-        String sql = "INSERT INTO account (first_name, last_name, ssn, password, name) VALUES (?, ?, ?, ?, ?)";
+        String sql = " delete from account where user_id = ? ";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, firstName);
-            stmt.setString(2, lastName);
-            stmt.setString(3, ssn);
-            stmt.setString(4, password);
-            stmt.setString(5, name);
+            stmt.setString(1, userId);
 
             int affectedRows = stmt.executeUpdate();
             if (affectedRows > 0) {
-                System.out.println("Successfully created an account for " + firstName + " " + lastName);
-            } else
-                System.out.println("Failed to create an account.");
-
+                System.out.println("Successfully deleted the account.");
+            } else {
+                System.out.println("Failed to delete the account.");
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Database operation failed. " + e.getMessage());
-        }
-    }
-
-    private void countingMissionsForAGivenYear(Connection connection, Scanner scanner) {
-        System.out.println("Enter year: ");
-        if (!scanner.hasNextInt()) {
-            scanner.nextLine();
-            System.out.println("Invalid year");
-            return;
-        }
-        int year = scanner.nextInt();
-        scanner.nextLine();
-
-        String sql = " select count(*) as mission_count from moon_mission where year(launch_date) = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, year);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    int count = rs.getInt("mission_count");
-                    System.out.println("Mission count for year: " + year);
-                    System.out.println("Number of moon missions: " + count);
-                } else
-                    System.out.println("No moon missions for year: " + year);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void moonMissionsById(Connection connection, Scanner scanner) {
-        System.out.println("Enter moon mission id: ");
-        if (!scanner.hasNextInt()) {
-            return;
-        }
-        String missionId = scanner.nextLine().trim();
-
-        String sql = "select spacecraft, mission_id, mission_type, launch_date from moon_mission where mission_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            long id;
-            try {
-                id = Long.parseLong(missionId);
-                stmt.setLong(1, id);
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid moon mission id. Please enter a number");
-                return;
-            }
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    System.out.println("ID: " + rs.getLong("mission_id"));
-                    System.out.println("Spacecraft: " + rs.getString("spacecraft"));
-                    System.out.println("Mission type: " + rs.getString("mission_type"));
-                    System.out.println("Launch date: " + rs.getString("launch_date"));
-                } else {
-                    System.out.println("Mission id " + missionId + " not found. Please enter a number");
-                }
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void listMoonMissions(Connection connection) {
-        String sql = " select spacecraft from moon_mission order by spacecraft ";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            boolean found = false;
-            while (rs.next()) {
-                System.out.println(rs.getString("spacecraft"));
-                found = true;
-            }
-            if (!found) {
-                System.out.println("No moon missions found.");
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error executing List Moon Missions: \" + e.getMessage(), e");
         }
     }
 }
