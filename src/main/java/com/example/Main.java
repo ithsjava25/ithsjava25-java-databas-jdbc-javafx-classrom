@@ -33,59 +33,122 @@ Main {
         // Connection, sparas i instansvariabel
         try {
             this.connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass);
-            System.out.println("Connected to DB!");
+            System.out.println("Connected to database successfully.");
         } catch (SQLException e) {
-            throw new RuntimeException("Could not connect to DB", e);
+            throw new RuntimeException("Could not connect to database", e);
         }
 
         //Todo: Starting point for your code
+
         Scanner scanner = new Scanner(System.in);
 
-        while (!login(this.connection, scanner)) {
-            // fortsätt försöka tills login lyckas
+        // LOGIN LOOP (mandatory before menu)
+        while (true) {
+            System.out.print("Username (or 0 to exit): ");
+            String username = scanner.nextLine();
+            if (username.equals("0")) return;
+
+            System.out.print("Password (or 0 to exit): ");
+            String password = scanner.nextLine();
+            if (password.equals("0")) return;
+
+            if (login(username, password)) {
+                break;
+            } else {
+                System.out.println("invalid");
+            }
         }
 
-        System.out.println("Login succsessfull! let's move on to the menu...");
+        // MENU LOOP AFTER LOGIN
+        boolean running = true;
+        while (running) {
+            printMenu();
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1" -> listMoonMissions();
+                case "2" -> getMoonMissionById(scanner);
+                case "3" -> countMissionsByYear(scanner);
+                case "4" -> createAccount(scanner);
+                case "5" -> updatePassword(scanner);
+                case "6" -> deleteAccount(scanner);
+                case "0" -> running = false;
+                default -> System.out.println("invalid");
+            }
+        }
     }
 
-    public static boolean login(Connection conn, Scanner scanner) {
 
-        System.out.print("Username (or 0 to exit): ");
-        String username = scanner.nextLine();
+    // todo: LOGIN uses column `name` created from CONCAT in init.sql
+    private boolean login(String username, String password) {
+        String sql = "SELECT * FROM account WHERE name = ? AND password = ?";
 
-        if (username.equals("0")) {
-            System.out.println("Exiting...");
-            System.exit(0);
-        }
-
-        System.out.print("Password (or 0 to exit): ");
-        String password = scanner.nextLine();
-
-        if (password.equals("0")) {
-            System.out.println("Exiting...");
-            System.exit(0);
-        }
-
-        String sql = "SELECT * FROM account WHERE first_name = ? AND password = ?";
-
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, username);
             stmt.setString(2, password);
 
             ResultSet rs = stmt.executeQuery();
-
-            if (!rs.next()) {
-                System.out.println("Invalid credentials");
-                return false;
-            }
-
-            System.out.println("Login successful!");
-            return true;
+            return rs.next();
 
         } catch (SQLException e) {
             throw new RuntimeException("Login failed", e);
         }
     }
+
+
+    // todo: print CLI menu
+    private void printMenu() {
+        System.out.println("1) List moon missions");
+        System.out.println("2) Get moon mission");
+        System.out.println("3) Count missions by year");
+        System.out.println("4) Create account");
+        System.out.println("5) Update account password");
+        System.out.println("6) Delete account");
+        System.out.println("0) Exit");
+    }
+
+    // todo: choice 1 - List moon missions
+    private void listMoonMissions() {
+        String sql = "SELECT spacecraft FROM moon_mission";
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                System.out.println(rs.getString("spacecraft"));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not list missions", e);
+        }
+    }
+
+    // todo: choice 2 - Get mission by ID
+    private void getMoonMissionById(Scanner scanner) {
+        System.out.print("mission_id: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        String sql = "SELECT * FROM moon_mission WHERE mission_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println(
+                        rs.getInt("mission_id") + " " +
+                                rs.getString("spacecraft") + " " +
+                                rs.getString("launch_date")
+                );
+            } else {
+                System.out.println("invalid");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
 
 
     /**
