@@ -99,6 +99,7 @@ Main {
 
     // todo: print CLI menu
     private void printMenu() {
+        System.out.println(" ---> MENU <--- ");
         System.out.println("1) List moon missions");
         System.out.println("2) Get moon mission");
         System.out.println("3) Count missions by year");
