@@ -42,7 +42,7 @@ Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        // LOGIN LOOP (mandatory before menu)
+        // todo: Log in loop
         while (true) {
             System.out.print("Username (or 0 to exit): ");
             String username = scanner.nextLine();
@@ -55,12 +55,13 @@ Main {
             if (login(username, password)) {
                 break;
             } else {
-                System.out.println("invalid");
+                System.out.println("Invalid username or password");
             }
         }
 
-        // MENU LOOP AFTER LOGIN
+        // todo: menu after successfully logged in
         boolean running = true;
+
         while (running) {
             printMenu();
             String choice = scanner.nextLine();
@@ -140,15 +141,40 @@ Main {
                                 rs.getString("spacecraft") + " " +
                                 rs.getString("launch_date")
                 );
+                System.out.println("------------");
             } else {
-                System.out.println("invalid");
+                System.out.println("Invalid username or password");
             }
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-    
+
+
+    // todo: choice 3 - Count missions by year
+    private void countMissionsByYear(Scanner scanner) {
+        System.out.print("Total missions for 2019: ");
+        int year = Integer.parseInt(scanner.nextLine());
+
+        String sql = "SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            System.out.println(rs.getInt(1));
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //todo: Choice 4 - Add costumer method.
+   
+
+
+
 
 
     /**
