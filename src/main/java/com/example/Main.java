@@ -167,10 +167,29 @@ public class Main {
     private void countingMissionsForAGivenYear(Connection connection, Scanner scanner) {
         System.out.println("Enter year: ");
         if (!scanner.hasNextInt()) {
+            scanner.nextLine();
+            System.out.println("Invalid year");
             return;
         }
         int year = scanner.nextInt();
-        String sql = " select count(*) from moon_mission where year(launch_date) = ?";
+            scanner.nextLine();
+
+        String sql = " select count(*) as mission_count from moon_mission where year(launch_date) = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setInt(1, year);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int count = rs.getInt("mission_count");
+                        System.out.println("Mission count for year: " + year);
+                        System.out.println("Number of moon missions: " + count );
+                    } else
+                        System.out.println("No moon missions for year: " + year);
+                }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void moonMissionsById(Connection connection, Scanner scanner) {
