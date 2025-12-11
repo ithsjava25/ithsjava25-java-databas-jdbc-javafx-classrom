@@ -8,16 +8,27 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * CLI handler for moon mission operations.
+ * Provides methods for listing, fetching by ID, and counting missions by year.
+ */
 public class MoonMissionCLI implements ExitMenuHandler {
 
     private final MoonMissionService service;
     private final InputReader input;
 
+    /**
+     * Creates a MoonMissionCLI with the provided service and input reader.
+     *
+     * @param service service handling moon mission data
+     * @param input input reader for user interaction
+     */
     public MoonMissionCLI(MoonMissionService service, InputReader input) {
         this.service = service;
         this.input = input;
     }
 
+    /** Lists all moon missions by spacecraft name. */
     public void listMissions() {
         try {
             List<MoonMission> missions = service.listMissions();
@@ -29,6 +40,7 @@ public class MoonMissionCLI implements ExitMenuHandler {
         }
     }
 
+    /** Fetches and displays a mission by its ID. */
     public void getMissionById() {
         var idWrapper = input.readInt("Mission ID");
         if (handleExitOrMenu(idWrapper.result())) return;
@@ -48,6 +60,10 @@ public class MoonMissionCLI implements ExitMenuHandler {
         }
     }
 
+    /**
+     * Counts missions for a given year, prints total and detailed summaries
+     * of missions sorted by launch date (most recent first).
+     */
     public void countMissionsByYear() {
         var yearWrapper = input.readInt("Year");
         if (handleExitOrMenu(yearWrapper.result())) return;
@@ -60,7 +76,6 @@ public class MoonMissionCLI implements ExitMenuHandler {
             System.out.println("\n---- Missions for year " + year + " ----");
             System.out.println("Total missions: " + count);
 
-            // 2) Lista alla missioner för året
             List<MoonMission> missions = service.listMissions();
             missions.stream()
                     .filter(m -> m.launchDate().toLocalDate().getYear() == year)
@@ -74,6 +89,7 @@ public class MoonMissionCLI implements ExitMenuHandler {
         }
     }
 
+    /** Prints a short summary for a single moon mission. */
     private void printMissionSummary(MoonMission m) {
         System.out.printf("Spacecraft: %s | Launch Date: %s | Rocket: %s | Operator: %s%n",
                 m.spacecraft(), m.launchDate(), m.carrierRocket(), m.operator());

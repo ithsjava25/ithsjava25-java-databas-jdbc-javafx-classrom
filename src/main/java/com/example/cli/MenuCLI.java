@@ -1,17 +1,32 @@
 package com.example.cli;
 
+/**
+ * Handles the main menu display and routes user selections
+ * to the appropriate CLI handlers for accounts or moon missions.
+ */
 public class MenuCLI {
 
     private final AccountCLI accountCLI;
     private final MoonMissionCLI missionCLI;
     private final InputReader input;
 
+    /**
+     * Creates a MenuCLI with the required CLI handlers and input reader.
+     *
+     * @param accountCLI CLI handler for account-related actions
+     * @param missionCLI CLI handler for moon mission-related actions
+     * @param input input reader for user interaction
+     */
     public MenuCLI(AccountCLI accountCLI, MoonMissionCLI missionCLI, InputReader input) {
         this.accountCLI = accountCLI;
         this.missionCLI = missionCLI;
         this.input = input;
     }
 
+    /**
+     * Displays the main menu, handles user input, and routes commands
+     * to the appropriate CLI methods until the user exits.
+     */
     public void showMainMenu() {
         while (true) {
             printHeader();
@@ -36,6 +51,7 @@ public class MenuCLI {
         }
     }
 
+    /** Prints the menu header and available options. */
     private void printHeader() {
         System.out.println("\n         🌕 MOON MISSION HUB 🌕         ");
         System.out.println("----------------------------------------");

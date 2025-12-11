@@ -6,6 +6,10 @@ import com.example.repository.RepositoryException;
 
 import java.util.List;
 
+/**
+ * CLI for managing accounts.
+ * Handles creating, updating, and deleting accounts via AccountService.
+ */
 public class AccountCLI implements ExitMenuHandler {
 
     private final AccountService service;
@@ -16,6 +20,7 @@ public class AccountCLI implements ExitMenuHandler {
         this.input = input;
     }
 
+    /** Prompts the user and creates a new account. */
     public void createAccount() {
         try {
             var first = input.readName("First name");
@@ -38,6 +43,7 @@ public class AccountCLI implements ExitMenuHandler {
         }
     }
 
+    /** Updates the password of an existing account after selecting by user ID. */
     public void updatePassword() {
         try {
             List<Account> accounts = service.listAccounts();
@@ -68,6 +74,7 @@ public class AccountCLI implements ExitMenuHandler {
         }
     }
 
+    /** Deletes an account after confirming with the user. */
     public void deleteAccount() {
         try {
             List<Account> accounts = service.listAccounts();

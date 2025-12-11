@@ -3,24 +3,39 @@ package com.example.cli;
 import com.example.service.AccountService;
 import com.example.repository.RepositoryException;
 
+/**
+ * Handles user login attempts, including input reading, validation, and retry limits.
+ */
 public class LoginManager implements ExitMenuHandler {
 
     private final AccountService service;
     private final int maxAttempts;
     private final InputReader input;
 
+    /**
+     * Creates a LoginManager with default max attempts (5).
+     */
     public LoginManager(AccountService service, InputReader input) {
         this(service, input, 5);
     }
 
+    /**
+     * Creates a LoginManager with a specified maximum number of login attempts.
+     *
+     * @param maxAttempts maximum allowed attempts before login fails
+     */
     public LoginManager(AccountService service, InputReader input, int maxAttempts) {
         this.service = service;
         this.input = input;
         this.maxAttempts = maxAttempts;
     }
 
+    /**
+     * Performs the login process, asking for username and password.
+     * Returns true if login succeeds, false if attempts are exhausted or user exits.
+     */
     public boolean login() {
-        System.out.println("Type 0 to exit anytime, or 'menu' to go back.");
+        System.out.println("Type 0 to exit anytime.");
 
         int attempts = 0;
         while (attempts < maxAttempts) {
@@ -46,7 +61,6 @@ public class LoginManager implements ExitMenuHandler {
                 System.out.println("Attempts left: " + (maxAttempts - attempts));
             }
         }
-
         return false;
     }
 }
