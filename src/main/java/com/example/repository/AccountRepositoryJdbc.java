@@ -6,12 +6,28 @@ import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * JDBC implementation of the {@link AccountRepository}.
+ * Handles database operations for Account objects.
+ */
 public class AccountRepositoryJdbc extends BaseRepository<Account> implements AccountRepository {
 
+    /**
+     * Constructs the repository with a given DataSource.
+     *
+     * @param dataSource the database source
+     * @param devMode    if true, enables debug logging
+     */
     public AccountRepositoryJdbc(DataSource dataSource, boolean devMode) {
         super(dataSource, devMode);
     }
 
+    /**
+     * Maps a ResultSet row to an Account object.
+     *
+     * @param rs the ResultSet to map
+     * @return the Account object
+     */
     @Override
     protected Account map(java.sql.ResultSet rs) throws java.sql.SQLException {
         return new Account(

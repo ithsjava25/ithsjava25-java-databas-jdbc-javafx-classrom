@@ -6,12 +6,28 @@ import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * JDBC implementation of MoonMissionRepository using a DataSource.
+ * Handles mapping of ResultSet to MoonMission objects and executing SQL queries.
+ */
 public class MoonMissionRepositoryJdbc extends BaseRepository<MoonMission> implements MoonMissionRepository {
 
+    /**
+     * Creates a new repository with the given DataSource and devMode flag.
+     *
+     * @param dataSource the DataSource to use for database connections
+     * @param devMode if true, prints debug information
+     */
     public MoonMissionRepositoryJdbc(DataSource dataSource, boolean devMode) {
         super(dataSource, devMode);
     }
 
+    /**
+     * Maps a ResultSet row to a MoonMission object.
+     *
+     * @param rs the ResultSet to map
+     * @return a MoonMission object
+     */
     @Override
     protected MoonMission map(java.sql.ResultSet rs) throws java.sql.SQLException {
         return new MoonMission(
