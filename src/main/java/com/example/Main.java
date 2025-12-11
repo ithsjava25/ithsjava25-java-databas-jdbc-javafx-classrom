@@ -218,13 +218,11 @@ public class Main {
 
     private void countingMissionsForAGivenYear(Connection connection, Scanner scanner) {
         System.out.println("Enter year: ");
-        if (!scanner.hasNextInt()) {
-            scanner.nextLine();
+        if (!scanner.hasNextLine()) {
             System.out.println("Invalid year");
             return;
         }
-        int year = scanner.nextInt();
-        scanner.nextLine();
+        int year = Integer.parseInt(scanner.nextLine());
 
         String sql = " select count(*) as mission_count from moon_mission where year(launch_date) = ?";
 
