@@ -40,7 +40,7 @@ public abstract class BaseRepository<T> {
                 return handler.apply(rs);
             }
         } catch (Exception e) {
-            throw dbError("executeQuery: " + sql, e);  // Inget cast här heller
+            throw dbError("executeQuery: " + sql, e);
         }
     }
 
