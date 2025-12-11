@@ -4,9 +4,21 @@ import com.example.cli.*;
 import com.example.repository.*;
 import com.example.service.*;
 
-
+/**
+ * Entry point for the Moon Mission application.
+ *
+ * <p>
+ * Initializes the development database if dev mode is enabled, sets up repositories,
+ * services, and CLI components, handles user login, and shows the main menu.
+ * </p>
+ */
 public class Main {
 
+    /**
+     * Starts the application.
+     *
+     * @param args Command-line arguments. Supports "--dev" to enable dev mode.
+     */
     public static void main(String[] args) {
         if (ConfigUtils.isDevMode(args)) {
             DevDatabaseInitializer.start();

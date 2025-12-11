@@ -3,6 +3,10 @@ package com.example;
 
 import org.testcontainers.containers.MySQLContainer;
 
+/**
+ * Initializes a MySQL development database using Testcontainers.
+ * Sets system properties for JDBC URL, username, and password after startup.
+ */
 public class DevDatabaseInitializer {
     private static MySQLContainer<?> mysql;
 

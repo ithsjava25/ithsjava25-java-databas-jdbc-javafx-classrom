@@ -5,11 +5,27 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * Simple DataSource implementation using DriverManager.
+ *
+ * <p>
+ * Provides basic JDBC connections using a URL, username, and password.
+ * Only getConnection methods are supported; other DataSource features throw
+ * UnsupportedOperationException.
+ * </p>
+ */
 public class SimpleDriverManagerDataSource implements DataSource {
     private final String url;
     private final String username;
     private final String password;
 
+    /**
+     * Creates a new DataSource with the given JDBC parameters.
+     *
+     * @param url the JDBC URL
+     * @param username the database username
+     * @param password the database password
+     */
     public SimpleDriverManagerDataSource(String url, String username, String password) {
         this.url = url;
         this.username = username;
