@@ -22,12 +22,13 @@ public class Main {
                             "as system properties (-Dkey=value) or environment variables.");
         }
 
-
-        if(validateSignIn() == false){
-            System.out.println("Invalid username or password");
-        } else {
-            System.out.println("YAY");
+        boolean execute = initialize();
+        while(execute){
+            printMenu();
+            String choice = IO.readln("Please enter your choice: ");
         }
+
+        System.out.println("hejhej");
 
     }
 
@@ -46,26 +47,36 @@ public class Main {
         return Arrays.asList(args).contains("--dev"); //Argument --dev
     }
 
+    private static boolean initialize(){
+        while (true){
+            String userName = IO.readln("Enter the username: ");
+            String password = IO.readln("Enter the password: ");
+            System.out.println();
 
-    private static boolean validateSignIn(){
-        String userName = IO.readln("Enter the username: ");
-        String password = IO.readln("Enter the password: ");
+            if(validateSignIn(userName, password))
+                return true;
 
-        try(Connection con = DataSource.getConnection(); PreparedStatement ps = con.prepareStatement(userQuery)){
-            ps.setString(1, userName);
-            ResultSet result = ps.executeQuery();
-            if(result.next() == false){
+            String choice = IO.readln("Invalid username or password. Press 0 to exit or any other key to return to sign in: ");
+            if(choice.trim().equals("0"))
                 return false;
+        }
+    }
+
+    private static boolean validateSignIn(String username, String password){
+        try(Connection con = DataSource.getConnection(); PreparedStatement pS = con.prepareStatement(userQuery)) {
+            pS.setString(1, username);
+            ResultSet result = pS.executeQuery();
+            if(result.next()){
+                String inputPassword = result.getString(3);
+                return Objects.equals(inputPassword, password);
             }
 
-            String inputPassword = result.getString(3);
-            return Objects.equals(inputPassword, password);
+            return false;
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-
 
     private static void printMenu(){
         System.out.println("                         MENU\n" +
@@ -77,6 +88,7 @@ public class Main {
                 "4) Create an account (prompts: first name, last name, ssn, password; prints confirmation).\n" +
                 "5) Update an account password (prompts: user_id, new password; prints confirmation).\n" +
                 "6) Delete an account (prompts: user_id; prints confirmation).\n" +
-                "0) Exit.");
+                "0) Exit." +
+                " ");
     }
 }
