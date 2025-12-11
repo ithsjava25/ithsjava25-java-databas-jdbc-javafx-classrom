@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class Main {
-    private static String userQuery = "SELECT * FROM account WHERE name = ?";
+    private static final String userQuery = "SELECT * FROM account WHERE name = ?";
 
     static void main(String[] args) throws SQLException {
         if (isDevMode(args)) {
@@ -22,14 +22,40 @@ public class Main {
                             "as system properties (-Dkey=value) or environment variables.");
         }
 
-        boolean execute = initialize();
-        while(execute){
-            printMenu();
-            String choice = IO.readln("Please enter your choice: ");
+        boolean executeProgram = authenticateUser();
+        while(executeProgram){
+            displayMenu();
+            String choice = IO.readln("Your choice: ");
+            executeProgram = handleMenuOptions(choice);
         }
+    }
 
-        System.out.println("hejhej");
-
+    private boolean handleMenuOptions(String choice){
+        switch (choice) {
+            case "0":
+                return false;
+            case "1":
+                System.out.println("Case 1");
+                return true;
+            case "2":
+                System.out.println("Case 2");
+                return true;
+            case "3":
+                System.out.println("Case 3");
+                return true;
+            case "4":
+                System.out.println("Case 4");
+                return true;
+            case "5":
+                System.out.println("Case 5");
+                return true;
+            case "6":
+                System.out.println("Case 6");
+                return true;
+            default:
+                System.out.println("Invalid entry, please try again.");
+                return true;
+        }
     }
 
     /**
@@ -47,13 +73,13 @@ public class Main {
         return Arrays.asList(args).contains("--dev"); //Argument --dev
     }
 
-    private static boolean initialize(){
+    private static boolean authenticateUser(){
         while (true){
-            String userName = IO.readln("Enter the username: ");
-            String password = IO.readln("Enter the password: ");
+            String username = IO.readln("Enter your username: ");
+            String password = IO.readln("Enter your password: ");
             System.out.println();
 
-            if(validateSignIn(userName, password))
+            if(validateSignIn(username, password))
                 return true;
 
             String choice = IO.readln("Invalid username or password. Press 0 to exit or any other key to return to sign in: ");
@@ -78,7 +104,7 @@ public class Main {
         }
     }
 
-    private static void printMenu(){
+    private static void displayMenu(){
         System.out.println("                         MENU\n" +
                 "=====================================================================\n" +
                 "\n" +
@@ -88,7 +114,7 @@ public class Main {
                 "4) Create an account (prompts: first name, last name, ssn, password; prints confirmation).\n" +
                 "5) Update an account password (prompts: user_id, new password; prints confirmation).\n" +
                 "6) Delete an account (prompts: user_id; prints confirmation).\n" +
-                "0) Exit." +
+                "0) Exit.\n" +
                 " ");
     }
 }
