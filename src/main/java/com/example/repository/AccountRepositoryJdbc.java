@@ -1,7 +1,6 @@
-package com.example;
+package com.example.repository;
 
 import com.example.model.Account;
-import com.example.repository.AccountRepository;
 
 import javax.sql.DataSource;
 import java.sql.*;
