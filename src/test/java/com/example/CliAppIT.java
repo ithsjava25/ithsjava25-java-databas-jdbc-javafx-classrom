@@ -179,6 +179,7 @@ public class CliAppIT {
                 "MB=V4cbAqPz4vqmQ",
                 "6",                 // delete account (menu option 6 after reordering)
                 Long.toString(userId),// user_id
+                "yes",                       // confirm delete ("y" eller "yes")
                 "0"                  // exit
         ) + System.lineSeparator();
 
