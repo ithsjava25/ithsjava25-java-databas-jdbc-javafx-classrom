@@ -32,7 +32,7 @@ public class Main {
 
 
             if (!authorized){
-                System.out.println("Username or password is invalid.");
+                System.out.println("Invalid username or password");
                 System.exit(0);
             }
 
@@ -44,8 +44,8 @@ public class Main {
                     case 2 -> getMission(connection);
                     case 3 -> missionsCountYear(connection);
                     case 4 -> createAccount(connection);
-                    case 5 -> System.out.println("5");
-                    case 6 -> System.out.println("6");
+                    case 5 -> updatePassword(connection);
+                    case 6 -> deleteAccount(connection);
                     case 0 -> System.exit(0);
 
                     default -> System.out.println("Invalid choice.\n");
@@ -207,7 +207,7 @@ public class Main {
             statement.executeUpdate();
 
 
-            System.out.println("\nAccount created successfully.");
+            System.out.println("\nAccount created");
 
 
         } catch (SQLException e) {
@@ -216,6 +216,46 @@ public class Main {
 
     }
 
+    private void updatePassword (Connection connection) {
+        int id = getValidInt("User id: ");
+        String newPassword = getValidPassword("New password: ");
+
+        String updatePwQuery = "update account set password = ? where id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(updatePwQuery)) {
+            statement.setInt(1, id);
+            statement.setString(2, newPassword);
+
+            statement.executeUpdate();
+
+
+            System.out.println("\nPassword updated");
+
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private void deleteAccount(Connection connection) {
+        int id = getValidInt("User id: ");
+
+        String deleteAccQuery = "delete from account where id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(deleteAccQuery)) {
+            statement.setInt(1, id);
+
+            statement.executeUpdate();
+
+
+            System.out.println("\nAccount deleted");
+
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private int getValidInt(String prompt){
         while(true){
