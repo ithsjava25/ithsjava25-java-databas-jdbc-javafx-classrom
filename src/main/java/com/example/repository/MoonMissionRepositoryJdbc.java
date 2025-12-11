@@ -1,4 +1,4 @@
-package com.example;
+package com.example.repository;
 
-public class MoonMissionImpl {
+public class MoonMissionRepositoryJdbc {
 }
