@@ -1,11 +1,14 @@
 package com.example;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class Main {
+
+    Scanner scanner = new Scanner(System.in);
 
     static void main(String[] args) {
         if (isDevMode(args)) {
@@ -27,11 +30,320 @@ public class Main {
         }
 
         try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
+
+            while(true) {
+                //Scanner scanner = new Scanner(System.in);
+                boolean authorized = login(connection);
+
+
+                if (!authorized) {
+                    System.out.println("Invalid username or password");
+                    System.out.println("press 0 to exit");
+                    while(true){
+                        String exit = scanner.nextLine().trim();
+                        if(exit.equals("0")){
+                            return;
+                        }
+                    }
+
+                }
+                else{
+                    break;
+                }
+            }
+
+
+            while(true) {
+                int option = promptMenu();
+
+                switch (option) {
+                    case 1 -> listMissions(connection);
+                    case 2 -> getMission(connection);
+                    case 3 -> missionsCountYear(connection);
+                    case 4 -> createAccount(connection);
+                    case 5 -> updatePassword(connection);
+                    case 6 -> deleteAccount(connection);
+                    case 0 -> {
+                        return;
+                    }
+
+                    default -> System.out.println("Invalid choice.\n");
+                }
+            }
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        //Todo: Starting point for your code
+
     }
+
+
+    private boolean login(Connection connection) {
+        System.out.println("Username: ");
+        String unm = scanner.nextLine();
+        System.out.println("Password: ");
+        String pw = scanner.nextLine();
+
+        String accQuery = "select count(*) from account where binary name = ? and binary password = ?";
+        try(PreparedStatement statement = connection.prepareStatement(accQuery)){
+            statement.setString(1, unm);
+            statement.setString(2, pw);
+
+            ResultSet rs = statement.executeQuery();
+            while(rs.next()) {
+                if(rs.getInt("count(*)") == 1){return true;}
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private int promptMenu(){
+        System.out.print("\n" +
+                "1) List moon missions (prints spacecraft names from `moon_mission`).\n" +
+                "2) Get a moon mission by mission_id (prints details for that mission).\n" +
+                "3) Count missions for a given year (prompts: year; prints the number of missions launched that year).\n" +
+                "4) Create an account (prompts: first name, last name, ssn, password; prints confirmation).\n" +
+                "5) Update an account password (prompts: user_id, new password; prints confirmation).\n" +
+                "6) Delete an account (prompts: user_id; prints confirmation).\n" +
+                "0) Exit.\n");
+
+        return getValidInt("Enter Choice: ");
+    }
+
+    private void listMissions(Connection connection){
+        String spaceshipQuery = "select spacecraft from moon_mission";
+
+        try(PreparedStatement statement = connection.prepareStatement(spaceshipQuery)){
+
+            ResultSet rs = statement.executeQuery();
+            while(rs.next()) {
+                System.out.println(rs.getString("spacecraft"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void getMission(Connection connection){
+        String  missionQuery = "select * from moon_mission where mission_id = ?";
+        int id = getValidInt("Mission Id: ");
+
+        try(PreparedStatement statement = connection.prepareStatement(missionQuery)){
+            statement.setInt(1, id);
+
+            ResultSet rs = statement.executeQuery();
+
+            if(rs.next()) {
+                System.out.println(
+                        "\nSpacecraft: " + rs.getString("spacecraft") +
+                        "\nLaunch date: " + rs.getString("launch_date") +
+                        "\nCarrier rocket: " + rs.getString("carrier_rocket") +
+                        "\nOperator: " + rs.getString("operator") +
+                        "\nMission type: " + rs.getString("mission_type") +
+                        "\nOutcome: " + rs.getString("outcome"));
+            }
+            else  {
+                System.out.println("\nMission not found.");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void missionsCountYear(Connection connection){
+        String missionYearQuery = "select count(*) from moon_mission where year(launch_date) = ?";
+        int year = getValidInt("Mission Year: ");
+
+        try(PreparedStatement statement = connection.prepareStatement(missionYearQuery)){
+            statement.setInt(1, year);
+
+            ResultSet rs = statement.executeQuery();
+
+            while(rs.next()) {
+                System.out.println("\nMissions in " + year + ": " + rs.getInt("count(*)"));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private void createAccount(Connection connection) {
+        String fn = getValidName("First Name: ");
+        String ln = getValidName("Last Name: ");
+        String ssn = getValidSSN("SSN: ");
+        String pw = getValidPassword("Password: ");
+
+        String accName;
+        if(fn.length() <= 3){
+            if(ln.length() <= 3){
+                accName = fn + ln;
+            }
+            else{
+                accName = fn + ln.substring(0, 2);
+            }
+        }
+        else if(ln.length() <= 3){
+           accName = fn.substring(0, 3) + ln;
+        }
+        else{
+            accName = fn.substring(0, 3) + ln.substring(0, 3);
+        }
+
+        String checkName = "select count(*) from account where name = ?";
+
+        while(true) {
+            try (PreparedStatement statement = connection.prepareStatement(checkName)) {
+                statement.setString(1, accName);
+
+                ResultSet rs = statement.executeQuery();
+
+
+                if(rs.next() && rs.getInt("count(*)") == 0){
+                    break;
+                }
+                else{
+                    accName = getValidName("Account Name: ");
+                }
+
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        String newAccQuery = "insert into account values (0, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement = connection.prepareStatement(newAccQuery)) {
+            statement.setString(1, accName);
+            statement.setString(2, pw);
+            statement.setString(3, fn);
+            statement.setString(4, ln);
+            statement.setString(5, ssn);
+
+            statement.executeUpdate();
+
+
+            System.out.println("\nAccount created");
+
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private void updatePassword (Connection connection) {
+        int id = getValidInt("User id: ");
+        String newPassword = getValidPassword("New password: ");
+
+        String updatePwQuery = "update account set password = ? where user_id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(updatePwQuery)) {
+            statement.setString(1, newPassword);
+            statement.setInt(2, id);
+
+            statement.executeUpdate();
+
+            System.out.println("updated");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
+    private void deleteAccount(Connection connection) {
+        int id = getValidInt("User id: ");
+
+        String deleteAccQuery = "delete from account where user_id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(deleteAccQuery)) {
+            statement.setInt(1, id);
+
+            statement.executeUpdate();
+
+
+            System.out.println("deleted");
+
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private int getValidInt(String prompt){
+        while(true){
+            try {
+                System.out.println("\n" + prompt);
+                int option = Integer.parseInt(scanner.nextLine());
+
+                if (option >= 0) {
+                    return option;
+                }
+                else  {
+                    System.out.println("Please enter a positive integer.\n");
+                }
+            }
+            catch (NumberFormatException e){
+                System.out.println("Please enter a valid integer\n");
+            }
+        }
+    }
+
+    private String getValidName(String prompt){
+        while(true){
+            System.out.println("\n" + prompt);
+            String name = scanner.nextLine().trim();
+
+            if (name.isBlank()) {
+                System.out.println("\nCannot be blank");
+            }
+            else if(!Pattern.matches("^[a-zA-Z]+$", name)){
+                System.out.println("\nMust only contain letters");
+            }
+            else{
+                return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+            }
+        }
+    }
+
+    private String getValidSSN(String prompt){
+        while(true){
+            System.out.println("\n" + prompt);
+            String ssn = scanner.nextLine().trim();
+
+            if (ssn.isBlank()) {
+                System.out.println("\nCannot be blank");
+            }
+            else if(!Pattern.matches("^\\d{6}-\\d{4}$", ssn)){
+                System.out.println("\nMust follow pattern YYMMDD-XXXX");
+            }
+            else {
+                return ssn;
+            }
+        }
+    }
+
+    private String getValidPassword(String prompt){
+        while(true){
+            System.out.println("\n" + prompt);
+            String pw = scanner.nextLine();
+
+            if(pw.length() < 6){
+                System.out.println("Password must be at least 6 characters");
+            }
+            else{
+                return pw;
+            }
+        }
+    }
+
 
     /**
      * Determines if the application is running in development mode based on system properties,
