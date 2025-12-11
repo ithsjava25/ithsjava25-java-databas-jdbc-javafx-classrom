@@ -52,16 +52,25 @@ public class MoonMissionCLI implements ExitMenuHandler {
         var yearWrapper = input.readInt("Year");
         if (handleExitOrMenu(yearWrapper.result())) return;
 
+        int year = yearWrapper.value();
+
         try {
+            int count = service.countMissionsByYear(year);
+
+            System.out.println("\n---- Missions for year " + year + " ----");
+            System.out.println("Total missions: " + count);
+
+            // 2) Lista alla missioner för året
             List<MoonMission> missions = service.listMissions();
-            System.out.println("\nMissions in " + yearWrapper.value() + " (most recent first):");
             missions.stream()
-                    .filter(m -> m.launchDate().toLocalDate().getYear() == yearWrapper.value())
+                    .filter(m -> m.launchDate().toLocalDate().getYear() == year)
                     .sorted(Comparator.comparing(MoonMission::launchDate).reversed())
                     .forEach(this::printMissionSummary);
-            System.out.println("-------------------\n");
+
+            System.out.println("----------------------------------------\n");
+
         } catch (RepositoryException e) {
-            System.out.println("❌ Error counting missions: " + e.getMessage());
+            System.out.println("❌ Error counting/listing missions: " + e.getMessage());
         }
     }
 

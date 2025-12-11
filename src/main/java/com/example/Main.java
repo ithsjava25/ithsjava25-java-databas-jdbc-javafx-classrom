@@ -4,7 +4,6 @@ import com.example.cli.*;
 import com.example.repository.*;
 import com.example.service.*;
 
-import java.sql.SQLException;
 
 public class Main {
 
