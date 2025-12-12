@@ -1,9 +1,8 @@
 package com.example;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class Main {
 
@@ -27,10 +26,32 @@ public class Main {
         }
 
         try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
+            Scanner scanner = new Scanner(System.in);
+            boolean loggedIn = false;
+            while (!loggedIn) {
+                System.out.print("Username: ");
+                String username = scanner.nextLine();
+                System.out.print("Password: ");
+                String password = scanner.nextLine();
+
+                if (isValidLogin(connection,username,password)) {
+                    loggedIn = true;
+                    System.out.println("Logged in as " + username);
+                } else  {
+                    System.out.println("Invalid username or password");
+                    System.out.println("0) Exit");
+                    System.out.println("Press any other key to try again");
+
+                    String choice = scanner.nextLine();
+                    if (choice.equals("0")) {
+                        return;
+                    }
+                }
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        //Todo: Starting point for your code
+
     }
 
     /**
@@ -58,5 +79,17 @@ public class Main {
             v = System.getenv(envKey);
         }
         return (v == null || v.trim().isEmpty()) ? null : v.trim();
+    }
+    private boolean isValidLogin(Connection conn, String user, String pass) throws SQLException {
+        String query = "SELECT * FROM account WHERE username = ? AND password = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, user);
+            stmt.setString(2, pass);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
     }
 }
