@@ -70,7 +70,7 @@ public class Main {
                             createAccount(connection, scanner);
                             break;
                         case "5":
-                            System.out.println("Not implemented yet (Step 3)");
+                            updateAccountPassword(connection, scanner);
                             break;
                         case "6":
                             System.out.println("Not implemented yet (Step 3)");
@@ -158,6 +158,22 @@ public class Main {
             stmt.setString(4, pass);
             stmt.executeUpdate();
             System.out.println("Account created.");
+        }
+    }
+
+    private void updateAccountPassword(Connection conn, Scanner sc) throws SQLException {
+        System.out.print("Enter user_id: ");
+        String id = sc.nextLine();
+        System.out.print("Enter new password: ");
+        String pass = sc.nextLine();
+
+        String query = "UPDATE account SET password = ? WHERE user_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, pass);
+            stmt.setString(2, id);
+            int rows = stmt.executeUpdate();
+            if (rows > 0) System.out.println("Password updated.");
+            else System.out.println("User not found.");
         }
     }
 
