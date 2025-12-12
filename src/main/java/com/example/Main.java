@@ -190,17 +190,30 @@ public class Main {
     private void createAccount(BufferedReader reader, String jdbcUrl, String dbUser, String dbPass) {
         try {
             System.out.print("Enter first name: ");
-            String firstName = reader.readLine();
+            String firstName = reader.readLine().trim();
             System.out.print("Enter last name: ");
-            String lastName = reader.readLine();
+            String lastName = reader.readLine().trim();
             System.out.print("Enter SSN: ");
             String ssn = reader.readLine();
             System.out.print("Enter password: ");
             String password = reader.readLine();
 
-            //Generera användarnamn
+            //Validera att namn inte är tomma
+            if (firstName.isEmpty() || lastName.isEmpty()) {
+                System.out.println("Error: First name and last name cannot be empty.");
+                return;
+            }
 
-            String name = (firstName.substring(0, 3) + lastName.substring(0, 3)).toLowerCase();
+            //Generera användarnamn på ett säkert sätt
+            String firstPart = firstName.length() >= 3 ?
+                    firstName.substring(0, 3).toLowerCase() :
+                    firstName.toLowerCase();
+
+            String lastPart = lastName.length() >= 3 ?
+                    lastName.substring(0, 3).toLowerCase() :
+                    lastName.toLowerCase();
+
+            String name = firstPart + lastPart;
 
             String sql = "INSERT INTO account (first_name, last_name, ssn, password, name) VALUES (?, ?, ?, ?, ?)";
             try (
