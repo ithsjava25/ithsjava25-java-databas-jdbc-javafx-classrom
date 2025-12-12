@@ -73,7 +73,7 @@ public class Main {
                             updateAccountPassword(connection, scanner);
                             break;
                         case "6":
-                            System.out.println("Not implemented yet (Step 3)");
+                            deleteAccount(connection, scanner);
                             break;
                         case "0":
                             return;
@@ -106,7 +106,7 @@ public class Main {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                System.out.println(rs.getString("name"));
+                System.out.println(rs.getString("spacecraft"));
             }
         }
     }
@@ -117,9 +117,11 @@ public class Main {
             stmt.setString(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    System.out.println("Mission: " + rs.getString("name") +
-                            " (ID: " + rs.getInt("mission_id") +
-                            "), Year: " + rs.getInt("launch_year"));
+                    String dateStr = rs.getString("launch_date");
+                    String year = (dateStr != null && dateStr.length() >= 4) ? dateStr.substring(0, 4) : "N/A";
+
+                    System.out.println("Mission: " + rs.getString("spacecraft") +
+                            ", Year: " + year);
                 } else {
                     System.out.println("Mission not found.");
                 }
@@ -128,13 +130,13 @@ public class Main {
     }
 
     private void countMissionsByYear(Connection conn, String year) throws SQLException {
-        String query = "SELECT COUNT(*) FROM moon_mission WHERE launch_year = ?";
+        String query = "SELECT COUNT(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, year);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     int count = rs.getInt(1);
-                    System.out.println("Found " + count + " missions in " + year);
+                    System.out.println("Missions in " + year + ": " + count);
                 }
             }
         }
@@ -173,6 +175,18 @@ public class Main {
             stmt.setString(2, id);
             int rows = stmt.executeUpdate();
             if (rows > 0) System.out.println("Password updated.");
+            else System.out.println("User not found.");
+        }
+    }
+    private void deleteAccount(Connection conn, Scanner sc) throws SQLException {
+        System.out.print("Enter user_id: ");
+        String id = sc.nextLine();
+
+        String query = "DELETE FROM account WHERE user_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, id);
+            int rows = stmt.executeUpdate();
+            if (rows > 0) System.out.println("Account deleted.");
             else System.out.println("User not found.");
         }
     }
