@@ -67,7 +67,7 @@ public class Main {
                             countMissionsByYear(connection, yearStr);
                             break;
                         case "4":
-                            System.out.println("Not implemented yet (Step 3)");
+                            createAccount(connection, scanner);
                             break;
                         case "5":
                             System.out.println("Not implemented yet (Step 3)");
@@ -137,6 +137,27 @@ public class Main {
                     System.out.println("Found " + count + " missions in " + year);
                 }
             }
+        }
+    }
+
+    private void createAccount(Connection conn, Scanner sc) throws SQLException {
+        System.out.print("First name: ");
+        String first = sc.nextLine();
+        System.out.print("Last name: ");
+        String last = sc.nextLine();
+        System.out.print("SSN: ");
+        String ssn = sc.nextLine();
+        System.out.print("Password: ");
+        String pass = sc.nextLine();
+
+        String query = "INSERT INTO account (first_name, last_name, ssn, password) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, first);
+            stmt.setString(2, last);
+            stmt.setString(3, ssn);
+            stmt.setString(4, pass);
+            stmt.executeUpdate();
+            System.out.println("Account created.");
         }
     }
 
