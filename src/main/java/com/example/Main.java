@@ -1,21 +1,16 @@
 package com.example;
+
 import com.example.Account;
 import com.example.AccountRepository;
 import com.example.AccountRepositoryJdbc;
 import com.example.MoonMissionRepository;
 import com.example.MoonMissionRepositoryJdbc;
 
-
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
-
+import java.util.Scanner;
 
 public class Main {
-
-    static void main(String[] args) {
+    public static void main(String[] args) {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
         }
@@ -26,8 +21,6 @@ public class Main {
         String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
         String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
         String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
-        System.out.println("Connecting to DB: " + jdbcUrl);
-        System.out.println("DB User: " + dbUser);
 
         if (jdbcUrl == null || dbUser == null || dbPass == null) {
             throw new IllegalStateException("Missing DB configuration...");
@@ -36,37 +29,28 @@ public class Main {
         SimpleDriverManagerDataSource ds = new SimpleDriverManagerDataSource(jdbcUrl, dbUser, dbPass);
         AccountRepository accountRepo = new AccountRepositoryJdbc(ds);
         MoonMissionRepository missionRepo = new MoonMissionRepositoryJdbc(ds);
-        //Seed data test
-        try (Connection conn = ds.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT name, password FROM account")) {
-            while (rs.next()) {
-                System.out.println("Seed account: " + rs.getString("name") + " / " + rs.getString("password"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
 
+        Scanner sc = new Scanner(System.in);
 
         System.out.println("Username:");
-        String username = IO.readln();
+        String username = sc.nextLine();
         System.out.println("Password:");
-        String password = IO.readln();
+        String password = sc.nextLine();
 
         if (accountRepo.findByNameAndPassword(username, password).isPresent()) {
             System.out.println("username accepted");
-            menuLoop(accountRepo, missionRepo);
+            menuLoop(accountRepo, missionRepo, sc);
         } else {
             System.out.println("Invalid username or password");
             System.out.println("0) Exit");
-            String opt = IO.readln();
+            String opt = sc.nextLine();
             if ("0".equals(opt)) {
                 return;
             }
         }
     }
 
-    private void menuLoop(AccountRepository accountRepo, MoonMissionRepository missionRepo) {
+    private void menuLoop(AccountRepository accountRepo, MoonMissionRepository missionRepo, Scanner sc) {
         boolean running = true;
         while (running) {
             System.out.println("Menu:");
@@ -78,14 +62,14 @@ public class Main {
             System.out.println("6) Delete account");
             System.out.println("0) Exit");
 
-            String choice = IO.readln();
+            String choice = sc.nextLine();
             switch (choice) {
                 case "1":
                     missionRepo.findAll().forEach(m -> System.out.println(m.spacecraft()));
                     break;
                 case "2":
                     System.out.println("mission_id:");
-                    int id = Integer.parseInt(IO.readln());
+                    int id = Integer.parseInt(sc.nextLine());
                     missionRepo.findById(id).ifPresentOrElse(
                             m -> System.out.println("Mission " + m.missionId() + ": " + m.spacecraft()),
                             () -> System.out.println("No mission found")
@@ -93,35 +77,35 @@ public class Main {
                     break;
                 case "3":
                     System.out.println("year:");
-                    int year = Integer.parseInt(IO.readln());
+                    int year = Integer.parseInt(sc.nextLine());
                     int count = missionRepo.countByYear(year);
-                    System.out.println(count);
+                    System.out.println(count + " missions in " + year);
                     break;
                 case "4":
                     System.out.println("first name:");
-                    String fn = IO.readln();
+                    String fn = sc.nextLine();
                     System.out.println("last name:");
-                    String ln = IO.readln();
+                    String ln = sc.nextLine();
                     System.out.println("ssn:");
-                    String ssn = IO.readln();
+                    String ssn = sc.nextLine();
                     System.out.println("password:");
-                    String pw = IO.readln();
+                    String pw = sc.nextLine();
                     String name = fn.substring(0,3) + ln.substring(0,3);
                     accountRepo.create(new Account(0, name, pw, fn, ln, ssn));
                     System.out.println("account created");
                     break;
                 case "5":
                     System.out.println("user_id:");
-                    int uid = Integer.parseInt(IO.readln());
+                    int uid = Integer.parseInt(sc.nextLine());
                     System.out.println("new password:");
-                    String newPw = IO.readln();
+                    String newPw = sc.nextLine();
                     if (accountRepo.updatePassword(uid, newPw)) {
                         System.out.println("updated");
                     }
                     break;
                 case "6":
                     System.out.println("user_id:");
-                    int delId = Integer.parseInt(IO.readln());
+                    int delId = Integer.parseInt(sc.nextLine());
                     if (accountRepo.delete(delId)) {
                         System.out.println("deleted");
                     }
