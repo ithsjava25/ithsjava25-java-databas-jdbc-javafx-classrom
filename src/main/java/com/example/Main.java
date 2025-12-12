@@ -127,7 +127,7 @@ public class Main {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Database operation failed. " + e.getMessage());
+            throw new RuntimeException("Database operation failed. " + e.getMessage(), e);
         }
     }
 
@@ -192,7 +192,7 @@ public class Main {
         try {
             id = Long.parseLong(missionId);
         } catch (NumberFormatException e) {
-        System.out.println("Invalid moon mission id. Please enter a number");
+        System.out.println("Invalid moon mission id.");
         return;
     }
 
@@ -222,7 +222,14 @@ public class Main {
             System.out.println("Invalid year");
             return;
         }
-        int year = Integer.parseInt(scanner.nextLine());
+        String yearString = scanner.nextLine().trim();
+        int year;
+        try {
+            year = Integer.parseInt(yearString);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid year. Please enter a number (e.g. 1987).");
+            return;
+        }
 
         String sql = " select count(*) as mission_count from moon_mission where year(launch_date) = ?";
 
@@ -247,14 +254,18 @@ public class Main {
         System.out.print("Enter first name: ");
         if (!scanner.hasNextLine()) {return;}
         String firstName = scanner.nextLine().trim();
-        if (firstName.length() < 3) { throw new IllegalArgumentException("First name must be at least 3 characters long."); }
+        if (firstName.length() < 3) {
+            System.out.println("First name must be at least 3 characters long."); return; }
         System.out.print("Enter last name: ");
         if (!scanner.hasNextLine()) {return;}
         String lastName = scanner.nextLine().trim();
-        if (lastName.length() < 3) { throw new IllegalArgumentException("First name must be at least 3 characters long."); }
+        if (lastName.length() < 3) {
+            System.out.println("Last name must be at least 3 characters long."); return; }
         System.out.print("Enter ssn: ");
+        if (!scanner.hasNextLine()) {return;}
         String ssn = scanner.nextLine().trim();
         System.out.print("Enter password: ");
+        if (!scanner.hasNextLine()) {return;}
         String password = scanner.nextLine().trim();
         String name = firstName.substring(0, 3) + lastName.substring(0, 3);
 
@@ -282,7 +293,15 @@ public class Main {
         if (!scanner.hasNextLine()) {
             return;
         }
-        String userId = scanner.nextLine();
+        String userIdStr = scanner.nextLine().trim();
+        long userId;
+        try {
+            userId = Long.parseLong(userIdStr);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid user_id. Please enter a number");
+            return;
+        }
+
         System.out.println("Enter new password: ");
         if (!scanner.hasNextLine()) {
             return;
@@ -292,7 +311,7 @@ public class Main {
         String sql = " update account set password = ? where user_id = ? ";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, newPassword);
-            stmt.setString(2, userId);
+            stmt.setLong(2, userId);
 
             int affectedRows = stmt.executeUpdate();
 
