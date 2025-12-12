@@ -25,6 +25,7 @@ CREATE TABLE moon_mission
     mission_type   VARCHAR(255),
     outcome        VARCHAR(255)
 );
+
 --
 -- Lägger till data i tabellerna för Laboration 1.
 --

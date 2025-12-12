@@ -1,9 +1,8 @@
 package com.example;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.mindrot.jbcrypt.BCrypt;
+
+import java.sql.*;
 
 public class JdbcAccountRepository implements AccountRepository {
 
@@ -14,37 +13,25 @@ public class JdbcAccountRepository implements AccountRepository {
     }
 
     @Override
-    public boolean createAccount(String firstName, String lastName, String ssn, String password) {
-        String sql = "INSERT INTO account (first_name, last_name, name, ssn, password)\n" +
-                "              VALUES (?, ?, ?, ?, ?)";
+    public boolean createAccount(String firstName, String lastName, String ssn, String rawPassword) {
+        String sql = "INSERT INTO account (first_name, last_name, name, ssn, password) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+            String username = firstName + lastName;
+            String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
 
             pstmt.setString(1, firstName);
             pstmt.setString(2, lastName);
-            pstmt.setString(3, ssn);
-            pstmt.setString(4, password);   // plain text for assignment tests
+            pstmt.setString(3, username);
+            pstmt.setString(4, ssn);
+            pstmt.setString(5, hashedPassword);
 
             return pstmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public boolean deleteAccount(int userId) {
-        String sql = "DELETE FROM account WHERE user_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-
-            pstmt.setInt(1, userId);
-
-            return pstmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException("Failed creating account", e);
         }
     }
 
@@ -66,27 +53,29 @@ public class JdbcAccountRepository implements AccountRepository {
                     );
                 }
             }
+
         } catch (SQLException e) {
-            throw new RuntimeException("Error retrieving account by username", e);
+            throw new RuntimeException("Error retrieving account", e);
         }
         return null;
     }
 
     @Override
     public boolean verifyPassword(String username, String rawPassword) {
-
         Account account = findByUsername(username);
 
         if (account == null)
             return false;
 
-
-        return account.getPassword().equals(rawPassword);
+        return BCrypt.checkpw(rawPassword, account.getPassword());
     }
 
     @Override
-    public boolean updatePassword(int userId, String hashedPassword) {
+    public boolean updatePassword(int userId, String rawPassword) {
+        String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+
         String sql = "UPDATE account SET password = ? WHERE user_id = ?";
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, hashedPassword);
@@ -95,8 +84,20 @@ public class JdbcAccountRepository implements AccountRepository {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw new RuntimeException("Failed updating password", e);
+        }
+    }
+
+    @Override
+    public boolean deleteAccount(int userId) {
+        String sql = "DELETE FROM account WHERE user_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed deleting account", e);
         }
     }
 }
