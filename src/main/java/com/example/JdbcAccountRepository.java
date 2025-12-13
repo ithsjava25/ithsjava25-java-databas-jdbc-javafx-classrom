@@ -1,8 +1,10 @@
 package com.example;
 
-import org.mindrot.jbcrypt.BCrypt;
+import com.example.AccountRepository;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class JdbcAccountRepository implements AccountRepository {
 
@@ -13,78 +15,37 @@ public class JdbcAccountRepository implements AccountRepository {
     }
 
     @Override
-    public boolean createAccount(String firstName, String lastName, String ssn, String rawPassword) {
-        String sql = "INSERT INTO account (first_name, last_name, name, ssn, password) " +
-                "VALUES (?, ?, ?, ?, ?)";
+    public boolean createAccount(String firstName, String lastName, String ssn, String password) {
+        String sql = """
+            INSERT INTO account (first_name, last_name, name, ssn, password)
+            VALUES (?, ?, ?, ?, ?)
+            """;
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        String username = firstName.substring(0, 3) + lastName.substring(0, 3);
 
-            String username = firstName + lastName;
-            String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, firstName);
+            ps.setString(2, lastName);
+            ps.setString(3, username);
+            ps.setString(4, ssn);
+            ps.setString(5, password); // plain text
 
-            pstmt.setString(1, firstName);
-            pstmt.setString(2, lastName);
-            pstmt.setString(3, username);
-            pstmt.setString(4, ssn);
-            pstmt.setString(5, hashedPassword);
-
-            return pstmt.executeUpdate() > 0;
-
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed creating account", e);
-        }
-    }
-
-    @Override
-    public Account findByUsername(String username) {
-        String sql = "SELECT * FROM account WHERE name = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, username);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Account(
-                            rs.getInt("user_id"),
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("ssn"),
-                            rs.getString("password")
-                    );
-                }
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error retrieving account", e);
-        }
-        return null;
-    }
-
-    @Override
-    public boolean verifyPassword(String username, String rawPassword) {
-        Account account = findByUsername(username);
-
-        if (account == null)
             return false;
-
-        return BCrypt.checkpw(rawPassword, account.getPassword());
+        }
     }
 
     @Override
-    public boolean updatePassword(int userId, String rawPassword) {
-        String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
-
+    public boolean updatePassword(int userId, String password) {
         String sql = "UPDATE account SET password = ? WHERE user_id = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setString(1, hashedPassword);
-            stmt.setInt(2, userId);
-
-            return stmt.executeUpdate() > 0;
-
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, password);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed updating password", e);
+            return false;
         }
     }
 
@@ -92,12 +53,11 @@ public class JdbcAccountRepository implements AccountRepository {
     public boolean deleteAccount(int userId) {
         String sql = "DELETE FROM account WHERE user_id = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            return stmt.executeUpdate() > 0;
-
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed deleting account", e);
+            return false;
         }
     }
 }

@@ -6,7 +6,7 @@ import org.testcontainers.containers.MySQLContainer;
 public class DevDatabaseInitializer {
     private static MySQLContainer<?> mysql;
 
-    public static synchronized void start() {
+    public static void start() {
         if (mysql == null) {
             mysql = new MySQLContainer<>("mysql:9.5.0")
                     .withDatabaseName("testdb")

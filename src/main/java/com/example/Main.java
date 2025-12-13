@@ -1,7 +1,10 @@
 package com.example;
 
-import java.util.Scanner;
 import org.mindrot.jbcrypt.BCrypt;
+
+import java.util.Scanner;
+
+//import org.mindrot.jbcrypt.BCrypt;
 import java.util.List;
 import java.sql.*;
 import java.util.Arrays;
@@ -193,21 +196,32 @@ public class Main {
                 System.out.print("Password: ");
                 String password = scanner.nextLine().trim();
 
-                boolean ok = accountRepo.verifyPassword(username, password);
+                String query = "SELECT * FROM account WHERE first_name = ? AND password = ?";
 
-                if (!ok) {
-                    System.out.println("Invalid username or password");
-                    continue;
+                try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+
+                    pstmt.setString(1, username);
+                    pstmt.setString(2, password);
+
+                    try (ResultSet rs = pstmt.executeQuery()) {
+
+                        if (rs.next()) {
+                            System.out.println("Logged in!");
+                            runApplicationMenu(connection);
+                            return;
+                        } else {
+                            System.out.println("invalid");
+                        }
+                    }
+
+                } catch (SQLException e) {
+                    System.err.println("Database error during login: " + e.getMessage());
                 }
-
-                System.out.println("Logged in!");
-                runApplicationMenu(connection);
-                return;
             }
 
+        } catch (SQLException e) {
+            throw new RuntimeException("Initial database connection failed.", e);
         }
-
-
     }
 
     private static boolean isDevMode(String[] args) {
@@ -228,5 +242,4 @@ public class Main {
     }
 
 }
-
 
