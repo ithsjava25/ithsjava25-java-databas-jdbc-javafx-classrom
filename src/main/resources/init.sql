@@ -29,7 +29,7 @@ CREATE TABLE moon_mission
 -- Lägger till data i tabellerna för Laboration 1.
 --
 INSERT INTO account (password, first_name, last_name, ssn)
-VALUES ('asd', 'Alexandra', 'Truby', '930213-1480');
+VALUES ('8j_]xrCfh#t5,vne', 'Alexandra', 'Truby', '930213-1480');
 INSERT INTO account (password, first_name, last_name, ssn)
 VALUES ('g`:+W{\%H9UXqGU4', 'Adna', 'Sandberg', '760723-6085');
 INSERT INTO account (password, first_name, last_name, ssn)

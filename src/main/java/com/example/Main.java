@@ -1,10 +1,9 @@
 package com.example;
 
-import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Scanner;
 
-//import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.List;
 import java.sql.*;
 import java.util.Arrays;
@@ -93,8 +92,8 @@ public class Main {
                     String rawPassword = scanner.nextLine();
 
 
-                    String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
-                    boolean accountCreated = accountRepo.createAccount(firstName, lastName, ssn, hashedPassword);
+
+                    boolean accountCreated = accountRepo.createAccount(firstName, lastName, ssn, rawPassword);
 
                     if (accountCreated) {
                         System.out.println("Account created successfully.");
@@ -122,9 +121,9 @@ public class Main {
                             break;
                         }
 
-                        String hashed = BCrypt.hashpw(newPassword, BCrypt.gensalt());
 
-                        boolean updatePassword = accountRepo.updatePassword(userId, hashed);
+
+                        boolean updatePassword = accountRepo.updatePassword(userId, newPassword);
 
                         if (updatePassword) {
                             System.out.println("updated");
@@ -186,36 +185,22 @@ public class Main {
 
         try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
 
-            AccountRepository accountRepo = new JdbcAccountRepository(connection);
             Scanner scanner = new Scanner(System.in);
+            AccountRepository accountRepo = new JdbcAccountRepository(connection);
 
             while (true) {
                 System.out.print("Username: ");
-                String username = scanner.nextLine().trim();
+                String username = scanner.nextLine();
 
                 System.out.print("Password: ");
-                String password = scanner.nextLine().trim();
+                String password = scanner.nextLine();
 
-                String query = "SELECT * FROM account WHERE first_name = ? AND password = ?";
-
-                try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-
-                    pstmt.setString(1, username);
-                    pstmt.setString(2, password);
-
-                    try (ResultSet rs = pstmt.executeQuery()) {
-
-                        if (rs.next()) {
-                            System.out.println("Logged in!");
-                            runApplicationMenu(connection);
-                            return;
-                        } else {
-                            System.out.println("invalid");
-                        }
-                    }
-
-                } catch (SQLException e) {
-                    System.err.println("Database error during login: " + e.getMessage());
+                if (accountRepo.verifyPassword(username, password)) {
+                    System.out.println("Logged in!");
+                    runApplicationMenu(connection);
+                    return;
+                } else {
+                    System.out.println("Invalid username or password");
                 }
             }
 
@@ -223,6 +208,8 @@ public class Main {
             throw new RuntimeException("Initial database connection failed.", e);
         }
     }
+
+
 
     private static boolean isDevMode(String[] args) {
         if (Boolean.getBoolean("devMode"))  //Add VM option -DdevMode=true
@@ -242,4 +229,3 @@ public class Main {
     }
 
 }
-
