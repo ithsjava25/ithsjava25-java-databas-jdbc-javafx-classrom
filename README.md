@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/339Lr3BJ)
 ### How the tests work (and Docker requirement)
 
 This project ships with an end‑to‑end CLI integration test suite that uses Testcontainers to spin up a temporary MySQL database. 

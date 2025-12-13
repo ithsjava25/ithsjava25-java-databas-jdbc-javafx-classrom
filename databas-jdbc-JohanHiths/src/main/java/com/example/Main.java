@@ -1,18 +1,13 @@
 package com.example;
 
+
 import org.mindrot.jbcrypt.BCrypt;
-
-import java.util.Scanner;
-
-//import org.mindrot.jbcrypt.BCrypt;
 import java.util.List;
 import java.sql.*;
 import java.util.Arrays;
 
 public class Main {
     public void runApplicationMenu(Connection connection) throws SQLException {
-
-        Scanner scanner = new Scanner(System.in);
         MoonMissionRepository missionRepo = new MoonMissionRepositoryJdbc(connection);
         AccountRepository accountRepo = new JdbcAccountRepository(connection);
         boolean isRunning = true;
@@ -27,8 +22,7 @@ public class Main {
             int choice;
 
             try {
-                System.out.println("Enter choice");
-                choice = Integer.parseInt(scanner.nextLine());
+                choice = Integer.parseInt(IO.readln("Enter choice: "));
             } catch (NumberFormatException e) {
                 System.out.println("Invalid choice.");
                 continue;
@@ -78,19 +72,20 @@ public class Main {
 
                     int count = missionRepo.countMissionsByYear(year);
 
-                    System.out.println(count);
+                    System.out.println("Number of missions launched in " + year + ": " + count);
                     break;
 
 
                 case 4:
                     System.out.println("Enter first name");
-                    String firstName = scanner.nextLine();
+                    String firstName = IO.readln();
                     System.out.println("Enter last name");
-                    String lastName = scanner.nextLine();
+                    String lastName = IO.readln();
                     System.out.println("Enter SSN");
-                    String ssn = scanner.nextLine();
+                    String ssn = IO.readln();
                     System.out.println("Enter password");
-                    String rawPassword = scanner.nextLine();
+                    String rawPassword = IO.readln();
+
 
 
                     String hashedPassword = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
@@ -106,7 +101,7 @@ public class Main {
                 case 5:
                     while (true) {
                         System.out.println("Enter the usedId to update password");
-                        String idInput = scanner.nextLine();
+                        String idInput = IO.readln();
 
                         int userId;
                         try {
@@ -118,7 +113,7 @@ public class Main {
 
                         System.out.println("Enter new password");
                         String newPassword = IO.readln();
-                        if (newPassword.equals("0")) {
+                        if(newPassword.equals("0")){
                             break;
                         }
 
@@ -127,7 +122,7 @@ public class Main {
                         boolean updatePassword = accountRepo.updatePassword(userId, hashed);
 
                         if (updatePassword) {
-                            System.out.println("updated");
+                            System.out.println("Password updated successfully.");
 
                         } else {
                             System.out.println("Password update failed.");
@@ -137,7 +132,7 @@ public class Main {
                     break;
                 case 6:
                     System.out.println("Enter user ID to delete!");
-                    String deleteInput = scanner.nextLine();
+                    String deleteInput = IO.readln();
 
                     int deleteId;
                     try {
@@ -148,13 +143,12 @@ public class Main {
                     }
                     boolean deleted = accountRepo.deleteAccount(deleteId);
                     if (deleted) {
-                        System.out.println("deleted");
-                    } else {
+                        System.out.println("Account deleted successfully.");
+                    } else{
                         System.out.println("Account delete failed.");
                     }
 
                     break;
-
             }
 
         }
@@ -162,7 +156,8 @@ public class Main {
     }
 
 
-    public static void main(String[] args) throws SQLException {
+
+    static void main(String[] args) throws SQLException {
         if (isDevMode(args)) {
             DevDatabaseInitializer.start();
         }
@@ -186,17 +181,12 @@ public class Main {
 
         try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPass)) {
 
-            AccountRepository accountRepo = new JdbcAccountRepository(connection);
-            Scanner scanner = new Scanner(System.in);
-
             while (true) {
-                System.out.print("Username: ");
-                String username = scanner.nextLine().trim();
 
-                System.out.print("Password: ");
-                String password = scanner.nextLine().trim();
+                String username = IO.readln("Username: ");
+                String password = IO.readln("Password: ");
 
-                String query = "SELECT * FROM account WHERE first_name = ? AND password = ?";
+                String query = "SELECT * FROM account WHERE name = ? AND password = ?";
 
                 try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 
@@ -208,9 +198,9 @@ public class Main {
                         if (rs.next()) {
                             System.out.println("Logged in!");
                             runApplicationMenu(connection);
-                            return;
+                            return; // exit login
                         } else {
-                            System.out.println("invalid");
+                            System.out.println("Invalid username or password");
                         }
                     }
 
@@ -218,12 +208,8 @@ public class Main {
                     System.err.println("Database error during login: " + e.getMessage());
                 }
             }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Initial database connection failed.", e);
         }
     }
-
     private static boolean isDevMode(String[] args) {
         if (Boolean.getBoolean("devMode"))  //Add VM option -DdevMode=true
             return true;
@@ -241,5 +227,178 @@ public class Main {
         return (v == null || v.trim().isEmpty()) ? null : v.trim();
     }
 
-}
+    private static void printMoonMissions(Connection connection) throws SQLException {
+        String moonQuery = "SELECT spacecraft FROM moon_mission";
 
+        try (PreparedStatement pstmt = connection.prepareStatement(moonQuery);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            System.out.println("\n=== Moon Missions ===");
+            while (rs.next()) {
+                System.out.println("- " + rs.getString("spacecraft"));
+            }
+
+
+        }
+
+    }
+
+
+    private static void printMoonMissionId(Connection connection) throws SQLException {
+
+
+        int missionId;
+        while (true) {
+            try {
+                String input = IO.readln("Enter the mission ID: ");
+                missionId = Integer.parseInt(input);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid mission ID (number).");
+            }
+        }
+
+        String sql = "SELECT * FROM moon_mission WHERE mission_id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, missionId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                if (rs.next()) {
+                    System.out.println("\n=== Mission Details ===");
+                    System.out.println("Mission ID: " + rs.getInt("mission_id"));
+                    System.out.println("Spacecraft: " + rs.getString("spacecraft"));
+                    System.out.println("Launch Date: " + rs.getDate("launch_date"));
+                    System.out.println("Carrier Rocket: " + rs.getString("carrier_rocket"));
+                    System.out.println("Operator: " + rs.getString("operator"));
+                    System.out.println("Mission Type: " + rs.getString("mission_type"));
+                    System.out.println("Outcome: " + rs.getString("outcome"));
+                } else {
+                    System.out.println("No mission found with ID " + missionId);
+                }
+            }
+        }
+    }
+
+    private static void printMissionYear(Connection connection) throws SQLException {
+        int missionYear;
+        while (true) {
+            try {
+                String input = IO.readln("Enter mission year (number)");
+                missionYear = Integer.parseInt(input);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter mission year (number).");
+            }
+        }
+
+
+
+
+
+        String moonDate = "SELECT count(*) FROM moon_mission WHERE YEAR(launch_date) = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(moonDate)) {
+            pstmt.setInt(1, missionYear);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+
+
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    System.out.println("\nMission Type: " + missionYear + ": " + count);
+                }
+            }
+        }
+    }
+
+    private static void printAccountCreation(Connection connection) throws SQLException {
+        System.out.println("First name");
+        String firstName = IO.readln();
+        System.out.println("Last name");
+        String lastName = IO.readln();
+        System.out.println("SSN");
+        String SSN = IO.readln();
+        System.out.println("Password");
+        String password = IO.readln();
+
+
+        //String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+        String sql = "INSERT INTO account (first_name, last_name, ssn, password) VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, firstName);
+            pstmt.setString(2, lastName);
+            pstmt.setString(3, SSN);
+            pstmt.setString(4, password);
+            int rows = pstmt.executeUpdate();
+
+            if (rows > 0) {
+                System.out.println("\nAccount Created");
+            } else {
+                System.out.println("\nAccount Creation Failed");
+            }
+        }
+    }
+
+    private static void printAccountUpdate(Connection connection) throws SQLException {
+        System.out.println("First name");
+        String firstName = IO.readln();
+        System.out.println("Last name");
+        String lastName = IO.readln();
+        System.out.println("SSN");
+        String SSN = IO.readln();
+        System.out.println("Password");
+        String password = IO.readln();
+
+        String account = "Update account SET password = ?, ssn ? WHERE last_name = ?";
+        ;
+
+        try (PreparedStatement pstmt = connection.prepareStatement(account)) {
+            pstmt.setString(1, firstName);
+            pstmt.setString(2, lastName);
+            pstmt.setString(3, SSN);
+            pstmt.setString(4, password);
+
+            int rs = pstmt.executeUpdate();
+            {
+                if (rs > 0) {
+                    System.out.println("\nAccount Updated");
+                } else {
+                    System.out.println("\nAccount Update Failed");
+                }
+            }
+        }
+    }
+
+    private static void printAccountDeletion(Connection connection) throws SQLException {
+        int accountId;
+        while (true) {
+            try {
+                String input = IO.readln("Enter the user ID to delete: ");
+                accountId = Integer.parseInt(input);
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid user ID (number).");
+            }
+        }
+
+        String sql = "DELETE FROM account WHERE user_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(String.valueOf(sql))) {
+            pstmt.setInt(1, accountId);
+            ;
+
+            int rs = pstmt.executeUpdate();
+            {
+                if (rs > 0) {
+                    System.out.println("\nAccount Id" + accountId + "removed");
+                } else {
+                    System.out.println("\nAccount Id" + accountId + "Removal Failed");
+                }
+            }
+        }
+    }
+}
