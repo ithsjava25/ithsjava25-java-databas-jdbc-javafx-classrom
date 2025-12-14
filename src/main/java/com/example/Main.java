@@ -36,7 +36,6 @@ public class Main {
         }
     }
 
-    //private final
     Scanner scanner = new Scanner(System.in);
     private boolean exitAfterLogin = false;
 
