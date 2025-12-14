@@ -68,7 +68,7 @@ public class MoonMissionRepo implements MoonMissionInter{
                 numMissions = result.getInt(1);
             }
 
-            System.out.println("There were " + numMissions + " moon missions registered during " + year + ".");
+            System.out.println("There were " + numMissions + " moon missions registered during " + year + ".\n");
 
         } catch (SQLException e) {
             e.printStackTrace();

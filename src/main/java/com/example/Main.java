@@ -121,15 +121,18 @@ public class Main {
     }
 
     private void getMissionFromID(MoonMissionRepo moonMissionRepo) {
-        System.out.print("Enter the mission-id: ");
+        System.out.print("Enter mission-id: ");
         int id = Integer.parseInt(scanner.nextLine().trim());
 
         moonMissionRepo.getMissionFromID(id);
+        System.out.println();
     }
 
     private void displayAllMoonMissions(MoonMissionRepo moonMissionRepo) {
         String column = "spacecraft";
+        System.out.println("-----Spacecrafts-----\n");
         moonMissionRepo.displayColumn(column);
+        System.out.println();
     }
 
     /**
@@ -157,24 +160,25 @@ public class Main {
             if(accountRepo.validateLogIn(username, password))
                 return true;
 
-            System.out.println("Invalid username or password. Press 0 to exit or any other key to return to sign in: ");
-            String choice = scanner.nextLine();
+            System.out.print("Invalid username or password. Press 0 to exit or any other key to return to sign in: ");
+            String choice = scanner.nextLine().trim();
+            System.out.println();
             if (choice != null && choice.trim().equals("0"))
                 return false;
         }
     }
 
     private static void displayMenu() {
-        System.out.println("         MENU\n" +
-                "=======================================\n" +
+        System.out.println("            MENU\n" +
+                "==================================\n" +
                 "\n" +
-                "1) List moon missions.\n" +
-                "2) Get a moon mission by mission_id.\n" +
-                "3) Count missions for a given year.\n" +
-                "4) Create an account.\n" +
-                "5) Update an account password.\n" +
-                "6) Delete an account.\n" +
-                "0) Exit.\n" +
+                "1) List moon missions\n" +
+                "2) Get a moon mission by mission_id\n" +
+                "3) Count missions for a given year\n" +
+                "4) Create an account\n" +
+                "5) Update an account password\n" +
+                "6) Delete an account\n" +
+                "0) Exit\n" +
                 " ");
     }
 }
