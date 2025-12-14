@@ -57,7 +57,7 @@ public class JdbcAccountRepository implements AccountRepository {
     @Override
     public boolean verifyPassword(String username, String rawPassword) {
         Account acc = findByUsername(username);
-        return acc != null && acc.getPassword().equals(rawPassword);
+        return acc != null && acc.password().equals(rawPassword);
     }
 
     @Override

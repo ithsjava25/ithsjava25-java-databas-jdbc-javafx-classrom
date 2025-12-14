@@ -32,9 +32,12 @@ import static org.assertj.core.api.Assertions.fail;
  * APP_JDBC_URL, APP_DB_USER, APP_DB_PASS
  * - After each operation the app prints a confirmation message or the read result.
  */
+
 @Testcontainers
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CliAppIT {
+
+
 
     @Container
     private static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:9.5.0")
@@ -48,7 +51,7 @@ public class CliAppIT {
     static void wireDbProperties() {
         System.setProperty("APP_JDBC_URL", mysql.getJdbcUrl());
         System.setProperty("APP_DB_USER", mysql.getUsername());
-        System.setProperty("APP_DB_PASS", mysql.getPassword());
+
     }
 
     @Test
@@ -310,7 +313,6 @@ public class CliAppIT {
             ps.setString(2, first);
             ps.setString(3, last);
             ps.setString(4, ssn);
-
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 keys.next();
