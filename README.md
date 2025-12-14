@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/339Lr3BJ)
 ### How the tests work (and Docker requirement)
 
 This project ships with an end‑to‑end CLI integration test suite that uses Testcontainers to spin up a temporary MySQL database. 
@@ -111,3 +112,38 @@ VG (extra credit)
   - Create a `DataSource` once at startup (using the connection settings above) and inject it into your repositories by constructor injection. For a minimal setup, you can implement a small `SimpleDriverManagerDataSource` that delegates to `DriverManager.getConnection(...)`. This keeps repositories independent of configuration and lets you upgrade to a connection pool (e.g., HikariCP) later without changing repository code.
   - Define `AccountRepository` and `MoonMissionRepository` and provide JDBC implementations.
   - In `Main`, resolve configuration, construct the `DataSource`, instantiate repositories.
+
+
+# Databas-JDBC Laboration (3)
+
+Detta projekt är en Java-applikation som använder JDBC för att interagera med en MySQL-databas. Denna applikation hanterar konton och rymduppdrag.
+
+## Funktioner
+
+- Logga in med användarnamn och lösenord.
+- Lista alla rymduppdrag.
+- Hämta ett specifikt uppdrag baserat på mission_id.
+- Räkna antal uppdrag för ett specifikt år.
+- Skapa nytt konto.
+- Uppdatera lösenord för ett konto.
+- Ta bort ett konto.
+
+## Användning
+
+1. Starta programmet via IntelliJ eller kommandoraden.
+2. Logga in med ett existerande konto (eller skapa ett nytt via menyn).
+3. Följ menyn för att utföra olika operationer på databasen.
+
+## Olika teknologier
+
+- Java 25
+- JDBC
+- MySQL
+- Maven
+
+## Testning
+
+I detta projekt används Maven för att köra integrationstester. Kör tester med:
+
+```bash
+./mvnw clean verify
