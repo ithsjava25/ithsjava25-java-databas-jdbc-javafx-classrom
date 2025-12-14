@@ -113,8 +113,9 @@ public class Main {
             stmt.setString(1, username);
             stmt.setString(2, password);
 
-            ResultSet rs = stmt.executeQuery();
-            return rs.next();
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
 
         } catch (SQLException e) {
             System.err.println("Login error: " + e.getMessage());
@@ -196,8 +197,7 @@ public class Main {
         String password = scanner.nextLine();
 
         // Skapa username från förnamn + första 3 bokstäver av efternamn
-        String username = (firstName.substring(0, Math.min(3, firstName.length())) +
-                lastName.substring(0, Math.min(3, lastName.length()))).toLowerCase();
+        String username = cap3(firstName) + cap3(lastName);
 
         String sql = "INSERT INTO account (first_name, last_name, ssn, name, password) " +
                 "VALUES (?, ?, ?, ?, ?)";
@@ -297,5 +297,15 @@ public class Main {
             v = System.getenv(envKey);
         }
         return (v == null || v.trim().isEmpty()) ? null : v.trim();
+    }
+
+    private static String cap3(String s) {
+        if (s == null) return "";
+        String t = s.trim();
+        if (t.isEmpty()) return "";
+
+        String part = t.substring(0, Math.min(3, t.length()));
+        return part.substring(0, 1).toUpperCase() +
+                part.substring(1).toLowerCase();
     }
 }
