@@ -45,6 +45,7 @@ public class Main {
         }
     }
 
+    //User login
     private boolean loginFlow(Connection connection) throws SQLException {
         while (true) {
             System.out.print("Input username: ");
@@ -58,6 +59,7 @@ public class Main {
                 return true;
             }
 
+            //If the login is invalid, print a message containing the word invalid and allow exiting via option 0
             System.out.print("Credentials invalid. Try again (Enter) or Exit? (0): ");
             if ("0".equals(scanner.nextLine().strip())) {
                 exitAfterLogin = true;
@@ -66,6 +68,8 @@ public class Main {
         }
     }
 
+    //Used for a lab exercise
+    //Check of user credentials
     private boolean checkCredentials(Connection connection, String user, String pass)
             throws SQLException {
 
@@ -100,6 +104,7 @@ public class Main {
         }
     }
 
+    //Menu with options
     private void printMenu() {
         System.out.println("""
                 
@@ -257,14 +262,25 @@ public class Main {
         }
     }
 
+    /**
+     * Determines if the application is running in development mode based on system properties,
+     * environment variables, or command-line arguments.
+     *
+     * @param args an array of command-line arguments
+     * @return {@code true} if the application is in development mode; {@code false} otherwise
+     */
     private static boolean isDevMode(String[] args) {
-        if (Boolean.getBoolean("devMode"))
+        if (Boolean.getBoolean("devMode"))  //Add VM option -DdevMode=true
             return true;
-        if ("true".equalsIgnoreCase(System.getenv("DEV_MODE")))
+        if ("true".equalsIgnoreCase(System.getenv("DEV_MODE")))  //Environment variable DEV_MODE=true
             return true;
-        return Arrays.asList(args).contains("--dev");
+        return Arrays.asList(args).contains("--dev");  //Argument --dev
     }
 
+    /**
+     * Reads configuration with precedence: Java system property first, then environment variable.
+     * Returns trimmed value or null if neither source provides a non-empty value.
+     */
     private static String resolveConfig(String propertyKey, String envKey) {
         String v = System.getProperty(propertyKey);
         if (v == null || v.trim().isEmpty()) {
