@@ -56,6 +56,7 @@ public class Main {
 
             if (checkCredentials(connection, username, password)) {
                 System.out.println("Login Successful!");
+                System.out.println();
                 return true;
             }
 
@@ -107,7 +108,6 @@ public class Main {
     //Menu with options
     private void printMenu() {
         System.out.println("""
-                
                 ==========================
                 1) List moon missions
                 2) Get mission by id
@@ -213,8 +213,8 @@ public class Main {
             return;
         }
 
-        System.out.print("New password: ");
-        String newPassword = scanner.nextLine();
+        //Ask for a valid password ie not blank
+        String newPassword = readRequired("New password");
 
         String sql = "UPDATE account SET password=? WHERE user_id=?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -224,6 +224,8 @@ public class Main {
         }
 
         System.out.println("Password updated.");
+        System.out.println("Press Enter to continue");
+        scanner.nextLine();
     }
 
     private void deleteAccount(Connection connection) throws SQLException {
