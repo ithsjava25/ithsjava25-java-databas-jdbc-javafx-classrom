@@ -6,9 +6,9 @@ import java.sql.*;
 import java.util.Arrays;
 
 public class Main {
-    public void runApplicationMenu(Connection connection) throws SQLException {
+    public void runApplicationMenu(Connection connection, Scanner scanner) throws SQLException {
 
-        Scanner scanner = new Scanner(System.in);
+
         MoonMissionRepository missionRepo = new MoonMissionRepositoryJdbc(connection);
         AccountRepository accountRepo = new JdbcAccountRepository(connection);
         boolean isRunning = true;
@@ -44,7 +44,13 @@ public class Main {
                 case 2:
                     System.out.print("Enter the mission ID: ");
                     String input = scanner.nextLine();
-                    int missionId = Integer.parseInt(input);
+                    int missionId;
+                    try {
+                        missionId = Integer.parseInt(input);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid mission ID.");
+                        break;
+                    }
 
                     MoonMission mission = missionRepo.findMoonMissionById(missionId);
 
@@ -114,7 +120,7 @@ public class Main {
                         }
 
                         System.out.println("Enter new password");
-                        String newPassword = IO.readln();
+                        String newPassword = scanner.nextLine();
                         if (newPassword.equals("0")) {
                             break;
                         }
@@ -166,6 +172,8 @@ public class Main {
         new Main().run();
 
 
+
+
     }
 
     public void run() throws SQLException {
@@ -195,7 +203,7 @@ public class Main {
 
                 if (accountRepo.verifyPassword(username, password)) {
                     System.out.println("Logged in!");
-                    runApplicationMenu(connection);
+                    runApplicationMenu(connection, scanner);
                     return;
                 } else {
                     System.out.println("Invalid username or password");

@@ -41,8 +41,8 @@ public class JdbcAccountRepository implements AccountRepository {
                 return new Account(
                         rs.getInt("user_id"),
                         rs.getString("first_name"),
-                        rs.getString("name"),
                         rs.getString("last_name"),
+                        rs.getString("name"),
                         rs.getString("ssn"),
                         rs.getString("password")
 
