@@ -1,11 +1,19 @@
 package com.example;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Scanner;
 
 public class Main {
     private static final String userQuery = "SELECT * FROM account WHERE name = ?";
+    private static String missionQuery = "SELECT * FROM moon_mission";
+    private static final String COUNT_MISSIONS_QUERY = "SELECT COUNT(*) FROM moon_mission WHERE launch_date LIKE ?";
+
+    private static final int columnsMoonMissions = 7;
+    private Scanner scanner = new Scanner(System.in);
 
     static void main(String[] args) throws SQLException {
         if (isDevMode(args)) {
@@ -24,37 +32,169 @@ public class Main {
 
         boolean executeProgram = authenticateUser();
         while(executeProgram){
+
             displayMenu();
-            String choice = IO.readln("Your choice: ");
-            executeProgram = handleMenuOptions(choice);
+            System.out.println("Your choice: ");
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "0":
+                    executeProgram = false;
+                    break;
+                case "1":
+                    displayAllMoonMissions();
+                    break;
+                case "2":
+                    getMissionFromID();
+                    break;
+                case "3":
+                    displayMissionsForAYear();
+                    break;
+                case "4":
+                    createAccount();
+                    break;
+                case "5":
+                    updatePassword();
+                    break;
+                case "6":
+                    deleteAccount();
+                    break;
+                default:
+                    System.out.println("Invalid entry, please try again.");
+                    break;
+
+            }
         }
     }
 
-    private boolean handleMenuOptions(String choice){
-        switch (choice) {
-            case "0":
-                return false;
-            case "1":
-                System.out.println("Case 1");
-                return true;
-            case "2":
-                System.out.println("Case 2");
-                return true;
-            case "3":
-                System.out.println("Case 3");
-                return true;
-            case "4":
-                System.out.println("Case 4");
-                return true;
-            case "5":
-                System.out.println("Case 5");
-                return true;
-            case "6":
-                System.out.println("Case 6");
-                return true;
-            default:
-                System.out.println("Invalid entry, please try again.");
-                return true;
+    public void createAccount(){
+        String addUser = "insert into account (name, password, first_name, last_name, ssn)" +
+                         "values (?, ?, ?, ?, ?)";
+
+        try(Connection con = DataSource.getConnection(); PreparedStatement pS = con.prepareStatement(addUser)) {
+            System.out.println("Enter your firstname: ");
+            String firstname = scanner.nextLine();
+            System.out.println("Enter your lastname: ");
+            String lastname = scanner.nextLine();
+            System.out.println("Choose a password: ");
+            String password = scanner.nextLine();
+            System.out.println("Enter your social security number (nnnnnn-nnnn): ");
+            String ssn = scanner.nextLine();
+            String username = firstname.substring(0, 3) + lastname.substring(0, 3);
+
+            pS.setString(1, username);
+            pS.setString(2, password);
+            pS.setString(3, firstname);
+            pS.setString(4, lastname);
+            pS.setString(5, ssn);
+            pS.executeUpdate();
+
+            System.out.println("User " + username + " succesfully created");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void deleteAccount(){
+        String delete = "delete from account where user_id = ?";
+        try(Connection con = DataSource.getConnection(); PreparedStatement pS = con.prepareStatement(delete)) {
+            System.out.println("Enter user_id for the account that you would like to delete: ");
+            int id = Integer.parseInt(scanner.nextLine());
+
+            pS.setInt(1, id);
+            int rowsDeleted = pS.executeUpdate();
+
+            if (rowsDeleted > 0)
+                System.out.println("Account with id " + id + " successfully deleted");
+            else
+                System.out.println("Error! Something went wrong when deleting the account.");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void updatePassword(){
+        String findId = "update account set password = ? where user_id = ?";
+        try(Connection con = DataSource.getConnection(); PreparedStatement pS = con.prepareStatement(findId)) {
+            System.out.print("Enter user-id: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            System.out.print("New password: ");
+            String password = scanner.nextLine();
+
+            pS.setString(1, password);
+            pS.setInt(2, id);
+            int rowsUpdated = pS.executeUpdate();
+
+            if (rowsUpdated > 0)
+                System.out.println("Password successfully updated.");
+            else
+                System.out.println("Error! Something went wrong when updating the password.");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void displayMissionsForAYear() {
+        try(Connection con = DataSource.getConnection(); PreparedStatement pS = con.prepareStatement(COUNT_MISSIONS_QUERY)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String inputYear = IO.readln("Select a year: ");
+            LocalDate year = LocalDate.parse(inputYear.trim() + "-01-01", formatter);
+
+            pS.setDate(1, Date.valueOf(year));
+            ResultSet result = pS.executeQuery();
+
+            if(result.next()){
+                int numOfMissions = result.getInt("mission_count");
+                System.out.println("During " + year + "there were " + numOfMissions + " missions in total.");
+            } else
+                System.out.println("There were no moon missions registered during " + year);
+
+
+        } catch (SQLException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    private void getMissionFromID(){
+        try(Connection con = DataSource.getConnection(); PreparedStatement pS = con.prepareStatement(missionQuery + " where mission_id = ?")) {
+            System.out.println("Enter a mission-id: ");
+            int missionId = Integer.parseInt(scanner.nextLine());
+            pS.setInt(1, missionId);
+            ResultSet result = pS.executeQuery();
+
+            if(result.next()){
+                ResultSetMetaData meta = result.getMetaData();
+                int columns = meta.getColumnCount();
+
+                System.out.println("\n-------- Mission Details --------\n");
+                for(int i = 1; i <= columns; i++){
+                    System.out.println(meta.getColumnName(i) + ": " + result.getString(i));
+                }
+
+            } else {
+                System.out.println("Could not find mission with id: " + missionId);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private void displayAllMoonMissions(){
+        try(Connection con = DataSource.getConnection(); PreparedStatement pS = con.prepareStatement(missionQuery)) {
+            ResultSet result = pS.executeQuery();
+            System.out.println("\nList of all spacecrafts: \n ");
+            while (result.next()){
+                String name = result.getString("spacecraft");
+                System.out.println(name);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -73,17 +213,20 @@ public class Main {
         return Arrays.asList(args).contains("--dev"); //Argument --dev
     }
 
-    private static boolean authenticateUser(){
+    private boolean authenticateUser(){
         while (true){
-            String username = IO.readln("Enter your username: ");
-            String password = IO.readln("Enter your password: ");
+            System.out.println("Username: ");
+            String username = scanner.nextLine();
+            System.out.println("Password: ");
+            String password = scanner.nextLine();
             System.out.println();
 
             if(validateSignIn(username, password))
                 return true;
 
-            String choice = IO.readln("Invalid username or password. Press 0 to exit or any other key to return to sign in: ");
-            if(choice.trim().equals("0"))
+            System.out.println("Invalid username or password. Press 0 to exit or any other key to return to sign in: ");
+            String choice = scanner.nextLine();
+            if(choice != null && choice.trim().equals("0"))
                 return false;
         }
     }

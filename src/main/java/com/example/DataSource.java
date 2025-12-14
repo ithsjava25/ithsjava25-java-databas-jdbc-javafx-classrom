@@ -16,6 +16,7 @@ public class DataSource {
         source.setUsername(dbUser);
         source.setPassword(dbPass);
         source.addConnectionProperty("hibernate.hbm2ddl.auto", "update");
+        source.setDefaultAutoCommit(true);
     }
 
     public static Connection getConnection() throws SQLException {
