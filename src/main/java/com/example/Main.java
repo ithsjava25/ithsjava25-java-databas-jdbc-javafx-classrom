@@ -1,9 +1,6 @@
 package com.example;
 
-
 import java.util.Scanner;
-
-
 import java.util.List;
 import java.sql.*;
 import java.util.Arrays;
@@ -46,7 +43,7 @@ public class Main {
                     break;
                 case 2:
                     System.out.print("Enter the mission ID: ");
-                    String input = IO.readln();
+                    String input = scanner.nextLine();
                     int missionId = Integer.parseInt(input);
 
                     MoonMission mission = missionRepo.findMoonMissionById(missionId);
@@ -67,7 +64,8 @@ public class Main {
                     int year = 0;
                     while (true) {
                         try {
-                            String yearInput = IO.readln("Enter the launch year: ");
+                            System.out.println("Enter the launch year");
+                            String yearInput = scanner.nextLine();
                             year = Integer.parseInt(yearInput);
                             break;
                         } catch (NumberFormatException e) {
@@ -190,10 +188,10 @@ public class Main {
 
             while (true) {
                 System.out.print("Username: ");
-                String username = scanner.nextLine();
+                String username = scanner.nextLine().trim();
 
                 System.out.print("Password: ");
-                String password = scanner.nextLine();
+                String password = scanner.nextLine().trim();
 
                 if (accountRepo.verifyPassword(username, password)) {
                     System.out.println("Logged in!");

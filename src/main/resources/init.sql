@@ -1,6 +1,8 @@
 --
 -- Skapar databasen och tabellerna för Laboration 1.
 --
+
+
 DROP DATABASE IF EXISTS testdb;
 CREATE DATABASE testdb;
 USE testdb;
@@ -15,6 +17,7 @@ CREATE TABLE account
     last_name  VARCHAR(255),
     ssn        VARCHAR(255)
 );
+
 CREATE TABLE moon_mission
 (
     mission_id     smallint PRIMARY KEY AUTO_INCREMENT,
