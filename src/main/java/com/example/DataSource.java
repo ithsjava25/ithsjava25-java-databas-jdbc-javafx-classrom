@@ -6,10 +6,10 @@ import java.sql.SQLException;
 
 public class DataSource {
 
-    private static BasicDataSource source = new BasicDataSource();
-    private final static String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
-    private final static String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
-    private final static String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
+    private static final BasicDataSource source = new BasicDataSource();
+    private static final String jdbcUrl = resolveConfig("APP_JDBC_URL", "APP_JDBC_URL");
+    private static final String dbUser = resolveConfig("APP_DB_USER", "APP_DB_USER");
+    private static final String dbPass = resolveConfig("APP_DB_PASS", "APP_DB_PASS");
 
     static {
         source.setUrl(jdbcUrl);
