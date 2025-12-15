@@ -28,7 +28,7 @@ public class AccountRepo implements AccountInter{
 
     @Override
     public void createAccount(String firstName, String lastName, String password, String ssn) {
-        String addUser = "insert into account (name, password, first_name, last_name, ssn)" +
+        String addUser = "insert into account (name, password, first_name, last_name, ssn) " +
                 "values (?, ?, ?, ?, ?)";
 
         try (Connection con = DataSource.getConnection();

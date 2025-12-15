@@ -90,7 +90,7 @@ public class Main {
 
     private boolean validPassword(String password){
         if(password.isBlank() || password.length() < 6){
-            System.out.println("Error. Password must be at least 8 characters long.");
+            System.out.println("Error. Password must be at least 6 characters long.");
             return false;
         }
         return true;
@@ -112,7 +112,7 @@ public class Main {
     private void displayMissionsForAYear(MoonMissionRepo moonMissionRepo) {
         System.out.print("Enter a year: ");
         String year = scanner.nextLine().trim();
-        if(!year.matches("^[1-2][09]\\d{2}")){
+        if(!year.matches("^(19|20)\\d{2}$")){
             System.out.println("Invalid year");
             return;
         }
